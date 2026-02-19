@@ -16,23 +16,37 @@ Expose `boj-client` as an MCP server over `stdio` so MCP clients can call BOJ en
 
 ## 3. Tool Surface
 
-The server exposes exactly three tools:
+The server exposes six tools:
 
 - `boj_get_data_code`
 - `boj_get_data_layer`
 - `boj_get_metadata`
+- `boj_list_databases`
+- `boj_get_parameter_catalog`
+- `boj_get_message_catalog`
 
 ### 3.1 Input policy
 
 - Input mirrors existing `boj-client::query::*` semantics.
 - `include_raw` defaults to `false`.
 - `frequency` is required only for `boj_get_data_layer`.
+- Discovery tools are read-only and return static catalog data from `boj_client::catalog`.
+- `boj_get_parameter_catalog` accepts endpoint scope (`all` / `get_data_code` / `get_data_layer` / `get_metadata`).
+- `boj_get_message_catalog` accepts optional `status` filter.
 
 ### 3.2 Output policy
 
 - Response is structured JSON.
 - Paging is single-call only; when provided by BOJ, `next_position` is returned as-is.
 - Raw decoded body is omitted unless `include_raw=true`.
+- Discovery responses include source metadata (`source_document`, `source_date`) for traceability.
+
+### 3.3 Recommended call order
+
+1. `boj_list_databases` to bootstrap valid DB values.
+2. `boj_get_parameter_catalog` to inspect constraints and limits.
+3. Data tools (`boj_get_data_code` / `boj_get_data_layer` / `boj_get_metadata`) for retrieval.
+4. `boj_get_message_catalog` when translating STATUS/MESSAGEID details.
 
 ## 4. Error Contract
 

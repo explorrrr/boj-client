@@ -1,6 +1,6 @@
 {
   "name": "@explorrrr/boj-mcp-server",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "NPX launcher for boj-mcp-server",
   "license": "MIT",
   "repository": {
@@ -25,11 +25,18 @@
     "node": ">=20"
   },
   "scripts": {
+    "lint": "biome lint .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "check": "biome check .",
     "test": "node --test test",
     "test:unit": "node --test test/unit",
     "test:integration": "node --test test/integration"
   },
   "dependencies": {
     "tar": "^7.4.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.2"
   }
 }

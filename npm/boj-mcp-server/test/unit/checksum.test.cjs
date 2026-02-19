@@ -6,11 +6,7 @@ const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
 
-const {
-  calculateFileSha256,
-  parseSha256Sums,
-  verifyFileSha256,
-} = require("../../lib/checksum.cjs");
+const { calculateFileSha256, parseSha256Sums, verifyFileSha256 } = require("../../lib/checksum.cjs");
 
 test("parseSha256Sums parses hash lines", () => {
   const content = [

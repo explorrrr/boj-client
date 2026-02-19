@@ -15,8 +15,9 @@ use rmcp::{
 };
 use serde_json::json;
 use tools::{
-    CodeToolOutput, GetDataCodeInput, GetDataLayerInput, GetMetadataInput, LayerToolOutput,
-    MetadataToolOutput,
+    CodeToolOutput, GetDataCodeInput, GetDataLayerInput, GetMessageCatalogInput, GetMetadataInput,
+    GetParameterCatalogInput, LayerToolOutput, ListDatabasesInput, ListDatabasesOutput,
+    MessageCatalogOutput, MetadataToolOutput, ParameterCatalogOutput,
 };
 
 #[derive(Debug, Clone)]
@@ -77,6 +78,48 @@ impl BojMcpServer {
         let config = self.config.clone();
         let input = params.0;
         run_blocking(move || run_metadata_tool(config, input))
+            .await
+            .map(Json)
+    }
+
+    #[tool(
+        name = "boj_list_databases",
+        description = "List known BOJ DB codes from the embedded catalog"
+    )]
+    async fn list_databases_tool(
+        &self,
+        params: Parameters<ListDatabasesInput>,
+    ) -> Result<Json<ListDatabasesOutput>, ErrorData> {
+        let _input = params.0;
+        run_blocking(move || Ok(run_list_databases_tool()))
+            .await
+            .map(Json)
+    }
+
+    #[tool(
+        name = "boj_get_parameter_catalog",
+        description = "Get BOJ parameter/limit catalog for one endpoint or all endpoints"
+    )]
+    async fn get_parameter_catalog_tool(
+        &self,
+        params: Parameters<GetParameterCatalogInput>,
+    ) -> Result<Json<ParameterCatalogOutput>, ErrorData> {
+        let input = params.0;
+        run_blocking(move || Ok(run_parameter_catalog_tool(input)))
+            .await
+            .map(Json)
+    }
+
+    #[tool(
+        name = "boj_get_message_catalog",
+        description = "Get BOJ STATUS/MESSAGEID catalog with optional status filter"
+    )]
+    async fn get_message_catalog_tool(
+        &self,
+        params: Parameters<GetMessageCatalogInput>,
+    ) -> Result<Json<MessageCatalogOutput>, ErrorData> {
+        let input = params.0;
+        run_blocking(move || Ok(run_message_catalog_tool(input)))
             .await
             .map(Json)
     }
@@ -158,6 +201,18 @@ fn run_metadata_tool(
     Ok(mapping::to_metadata_output(response, include_raw))
 }
 
+fn run_list_databases_tool() -> ListDatabasesOutput {
+    mapping::to_list_databases_output()
+}
+
+fn run_parameter_catalog_tool(input: GetParameterCatalogInput) -> ParameterCatalogOutput {
+    mapping::to_parameter_catalog_output(input.endpoint)
+}
+
+fn run_message_catalog_tool(input: GetMessageCatalogInput) -> MessageCatalogOutput {
+    mapping::to_message_catalog_output(input.status)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -210,5 +265,36 @@ mod tests {
 
         let error = run_layer_tool(config, input).expect_err("invalid date should fail");
         assert_eq!(error.code, ErrorCode::INVALID_PARAMS);
+    }
+
+    #[test]
+    fn list_databases_returns_known_count() {
+        let output = run_list_databases_tool();
+        assert_eq!(output.count, 50);
+        assert!(output.databases.iter().any(|entry| entry.code == "BP01"));
+    }
+
+    #[test]
+    fn parameter_catalog_filters_by_endpoint() {
+        let output = run_parameter_catalog_tool(GetParameterCatalogInput {
+            endpoint: tools::EndpointScopeParam::GetMetadata,
+        });
+
+        assert_eq!(output.endpoint_scope, "getMetadata");
+        assert!(
+            output
+                .parameters
+                .iter()
+                .all(|entry| entry.requirements.metadata_api != "unsupported")
+        );
+        assert!(output.frequency_codes.is_empty());
+        assert!(output.layer_rules.is_empty());
+    }
+
+    #[test]
+    fn message_catalog_status_filter_applies() {
+        let output = run_message_catalog_tool(GetMessageCatalogInput { status: Some(500) });
+        assert_eq!(output.count, 1);
+        assert_eq!(output.messages[0].message_id, "M181090S");
     }
 }

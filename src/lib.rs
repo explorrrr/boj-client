@@ -19,6 +19,8 @@
 #![deny(rustdoc::broken_intra_doc_links)]
 #![deny(rustdoc::bare_urls)]
 
+/// Static discovery catalog derived from BOJ API manual appendices.
+pub mod catalog;
 /// BOJ API client entry point.
 pub mod client;
 /// Error definitions shared across query, transport, and decode layers.

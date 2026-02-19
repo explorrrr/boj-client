@@ -32,8 +32,5 @@ test("resolveTarget throws for unsupported combinations", () => {
 });
 
 test("assetNameForTarget builds release asset name", () => {
-  assert.equal(
-    assetNameForTarget("x86_64-unknown-linux-gnu"),
-    "boj-mcp-server-x86_64-unknown-linux-gnu.tar.gz",
-  );
+  assert.equal(assetNameForTarget("x86_64-unknown-linux-gnu"), "boj-mcp-server-x86_64-unknown-linux-gnu.tar.gz");
 });

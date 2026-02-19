@@ -7,7 +7,7 @@ main(process.argv.slice(2))
     process.exit(typeof exitCode === "number" ? exitCode : 0);
   })
   .catch((error) => {
-    const message = error && error.message ? error.message : String(error);
+    const message = error?.message ? error.message : String(error);
     console.error(`[boj-mcp-server] ${message}`);
     process.exit(1);
   });

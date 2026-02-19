@@ -95,6 +95,9 @@ This repository includes both the Rust MCP server binary `boj-mcp-server` and th
 - `boj_get_data_code`
 - `boj_get_data_layer`
 - `boj_get_metadata`
+- `boj_list_databases`
+- `boj_get_parameter_catalog`
+- `boj_get_message_catalog`
 
 ### Run with npx
 
@@ -144,9 +147,17 @@ npm publication uses GitHub Actions OIDC trusted publishing, so `NPM_TOKEN` is n
 `raw` is returned only when `include_raw=true`.  
 `get_data_code` and `get_data_layer` are single-page responses; use `next_position` to request the next page.
 
+Recommended call order for LLM/MCP usage:
+
+1. `boj_list_databases` to discover DB candidates
+2. `boj_get_parameter_catalog` to inspect parameter and limit constraints
+3. `boj_get_data_code` / `boj_get_data_layer` / `boj_get_metadata` for data retrieval
+4. `boj_get_message_catalog` to resolve `MESSAGEID` details when needed
+
 ## Public API Notes (0.1.0)
 
 - Client: `boj_client::client::BojClient`
+- Discovery catalog: `boj_client::catalog::*`
 - Queries and options: `boj_client::query::*`
 - Response types: `boj_client::model::*`
 - `decode` / `transport` are internal implementation modules and are not public

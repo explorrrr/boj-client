@@ -2,8 +2,7 @@
 
 const { assetNameForTarget } = require("./platform.cjs");
 
-const DEFAULT_RELEASE_BASE_URL =
-  "https://github.com/explorrrr/boj-client/releases/download";
+const DEFAULT_RELEASE_BASE_URL = "https://github.com/explorrrr/boj-client/releases/download";
 
 function normalizeBaseUrl(baseUrl) {
   return String(baseUrl || DEFAULT_RELEASE_BASE_URL).replace(/\/+$/, "");

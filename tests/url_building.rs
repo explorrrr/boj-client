@@ -92,3 +92,22 @@ fn metadata_query_builds_expected_url() {
         "/api/v1/getMetadata?format=csv&lang=jp&db=PR01"
     );
 }
+
+#[test]
+fn unknown_db_is_allowed_for_backward_compatibility() {
+    let server = StubServer::serve_once(StubResponse::with_content_type(
+        200,
+        fixture_bytes("tests/fixtures/json_success_code_api.json"),
+        "application/json",
+    ));
+    let client = BojClient::new().with_base_url(server.base_url().to_string());
+
+    let query = CodeQuery::new("unknown_db", vec!["TK99F1000601GCQ01000".to_string()]).unwrap();
+    let _ = client.get_data_code(&query).unwrap();
+
+    let request = server.finish().unwrap();
+    assert_eq!(
+        request.target,
+        "/api/v1/getDataCode?db=UNKNOWN_DB&code=TK99F1000601GCQ01000"
+    );
+}

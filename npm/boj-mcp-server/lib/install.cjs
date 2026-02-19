@@ -62,13 +62,7 @@ async function downloadFile(url, destinationPath) {
   await pipeline(Readable.fromWeb(response.body), createWriteStream(destinationPath));
 }
 
-async function ensureBinary({
-  version,
-  releaseBaseUrl,
-  cacheDir,
-  platform = process.platform,
-  arch = process.arch,
-}) {
+async function ensureBinary({ version, releaseBaseUrl, cacheDir, platform = process.platform, arch = process.arch }) {
   if (!version) {
     throw new Error("version is required for binary install");
   }
@@ -102,9 +96,7 @@ async function ensureBinary({
     const checksums = parseSha256Sums(checksumsText);
     const expectedHash = checksums.get(release.assetName);
     if (!expectedHash) {
-      throw new Error(
-        `checksum entry not found for ${release.assetName} in ${release.checksumUrl}`,
-      );
+      throw new Error(`checksum entry not found for ${release.assetName} in ${release.checksumUrl}`);
     }
 
     const archivePath = path.join(tempDir, release.assetName);
