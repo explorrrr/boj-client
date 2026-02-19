@@ -12,7 +12,9 @@ fn parses_success_json_and_normalizes_points() {
         fixture_bytes("tests/fixtures/json_success_code_api.json"),
         "application/json",
     ));
-    let client = BojClient::new().with_base_url(server.base_url().to_string());
+    let client = BojClient::new()
+        .expect("default client should build")
+        .with_base_url(server.base_url().to_string());
 
     let query = CodeQuery::new("CO", vec!["TK99F1000601GCQ01000".to_string()])
         .unwrap()
@@ -41,7 +43,9 @@ fn parses_success_json_with_no_data() {
         fixture_bytes("tests/fixtures/json_success_no_data.json"),
         "application/json",
     ));
-    let client = BojClient::new().with_base_url(server.base_url().to_string());
+    let client = BojClient::new()
+        .expect("default client should build")
+        .with_base_url(server.base_url().to_string());
     let query = CodeQuery::new("CO", vec!["TK99F1000601GCQ01000".to_string()])
         .unwrap()
         .with_format(Format::Json)
@@ -62,7 +66,9 @@ fn returns_api_error_for_error_json_payload() {
         fixture_bytes("tests/fixtures/json_error_400_invalid_db.json"),
         "application/json",
     ));
-    let client = BojClient::new().with_base_url(server.base_url().to_string());
+    let client = BojClient::new()
+        .expect("default client should build")
+        .with_base_url(server.base_url().to_string());
     let query = CodeQuery::new("CO", vec!["TK99F1000601GCQ01000".to_string()])
         .unwrap()
         .with_format(Format::Json)
@@ -88,7 +94,9 @@ fn parses_metadata_json_payload() {
         fixture_bytes("tests/fixtures/json_success_metadata_api.json"),
         "application/json",
     ));
-    let client = BojClient::new().with_base_url(server.base_url().to_string());
+    let client = BojClient::new()
+        .expect("default client should build")
+        .with_base_url(server.base_url().to_string());
     let query = MetadataQuery::new("FM08")
         .unwrap()
         .with_format(Format::Json)
@@ -111,7 +119,9 @@ fn rejects_legacy_json_shape() {
         fixture_bytes("tests/fixtures/json_legacy_code_api.json"),
         "application/json",
     ));
-    let client = BojClient::new().with_base_url(server.base_url().to_string());
+    let client = BojClient::new()
+        .expect("default client should build")
+        .with_base_url(server.base_url().to_string());
     let query = CodeQuery::new("CO", vec!["TK99F1000601GCQ01000".to_string()])
         .unwrap()
         .with_format(Format::Json)

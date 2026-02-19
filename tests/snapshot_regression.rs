@@ -13,7 +13,9 @@ fn request_url_snapshot() {
         fixture_bytes("tests/fixtures/json_success_code_api.json"),
         "application/json",
     ));
-    let client = BojClient::new().with_base_url(server.base_url().to_string());
+    let client = BojClient::new()
+        .expect("default client should build")
+        .with_base_url(server.base_url().to_string());
 
     let query = CodeQuery::new(
         "CO",
@@ -35,10 +37,7 @@ fn request_url_snapshot() {
 
     assert_yaml_snapshot!(
         json!({"target": request.target}),
-        @r###"
-        ---
-        target: /api/v1/getDataCode?format=json&lang=jp&db=CO&startDate=202401&endDate=202504&code=TK99F1000601GCQ01000%2CTK99F2000601GCQ01000
-        "###
+        @r###"target: /api/v1/getDataCode?format=json&lang=jp&db=CO&startDate=202401&endDate=202504&code=TK99F1000601GCQ01000%2CTK99F2000601GCQ01000"###
     );
 }
 
@@ -49,7 +48,9 @@ fn response_shape_snapshot() {
         fixture_bytes("tests/fixtures/json_success_code_api.json"),
         "application/json",
     ));
-    let client = BojClient::new().with_base_url(server.base_url().to_string());
+    let client = BojClient::new()
+        .expect("default client should build")
+        .with_base_url(server.base_url().to_string());
 
     let query = CodeQuery::new("CO", vec!["TK99F1000601GCQ01000".to_string()]).unwrap();
 
@@ -72,7 +73,6 @@ fn response_shape_snapshot() {
                 .and_then(|point| point.value.clone()),
         }),
         @r###"
-        ---
         first_point:
           survey_date: "202401"
           value: "11"

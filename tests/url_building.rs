@@ -11,7 +11,9 @@ fn code_query_builds_stable_url_and_normalizes_case() {
         fixture_bytes("tests/fixtures/json_success_code_api.json"),
         "application/json",
     ));
-    let client = BojClient::new().with_base_url(server.base_url().to_string());
+    let client = BojClient::new()
+        .expect("default client should build")
+        .with_base_url(server.base_url().to_string());
 
     let query = CodeQuery::new(
         "co",
@@ -46,7 +48,9 @@ fn layer_query_builds_expected_url() {
         fixture_bytes("tests/fixtures/json_success_code_api.json"),
         "application/json",
     ));
-    let client = BojClient::new().with_base_url(server.base_url().to_string());
+    let client = BojClient::new()
+        .expect("default client should build")
+        .with_base_url(server.base_url().to_string());
 
     let query = LayerQuery::new(
         "bp01",
@@ -77,7 +81,9 @@ fn metadata_query_builds_expected_url() {
         fixture_bytes("tests/fixtures/json_success_metadata_api.json"),
         "application/json",
     ));
-    let client = BojClient::new().with_base_url(server.base_url().to_string());
+    let client = BojClient::new()
+        .expect("default client should build")
+        .with_base_url(server.base_url().to_string());
 
     let query = MetadataQuery::new("pr01")
         .unwrap()
@@ -100,7 +106,9 @@ fn unknown_db_is_allowed_for_backward_compatibility() {
         fixture_bytes("tests/fixtures/json_success_code_api.json"),
         "application/json",
     ));
-    let client = BojClient::new().with_base_url(server.base_url().to_string());
+    let client = BojClient::new()
+        .expect("default client should build")
+        .with_base_url(server.base_url().to_string());
 
     let query = CodeQuery::new("unknown_db", vec!["TK99F1000601GCQ01000".to_string()]).unwrap();
     let _ = client.get_data_code(&query).unwrap();

@@ -30,7 +30,7 @@
 
 ```toml
 [dependencies]
-boj-client = "0.2.0"
+boj-client = "0.3.0"
 ```
 
 ## 公式情報（参照元）
@@ -74,7 +74,7 @@ use boj_client::client::BojClient;
 use boj_client::query::{CodeQuery, Format, Language};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = BojClient::new();
+    let client = BojClient::new()?;
     let query = CodeQuery::new("CO", vec!["TK99F1000601GCQ01000".to_string()])?
         .with_format(Format::Json)
         .with_lang(Language::En)
@@ -183,7 +183,11 @@ cargo run -p boj-mcp-server
 3. `boj_get_data_code` / `boj_get_data_layer` / `boj_get_metadata` を実行
 4. 必要に応じて `boj_get_message_catalog` で `MESSAGEID` を参照
 
-## 公開APIノート（0.2.0）
+## 公開APIノート（0.3.0）
+
+- Breaking: `BojClient::new()` は `Result<BojClient, BojError>` を返すようになりました。
+- Breaking: `BojClient` の `Default` 実装を削除しました。
+- 既定の内部HTTPクライアントは 30 秒タイムアウトを設定します。
 
 - クライアント: `boj_client::client::BojClient`
 - ディスカバリ辞書: `boj_client::catalog::*`

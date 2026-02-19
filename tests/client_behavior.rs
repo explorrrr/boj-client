@@ -16,7 +16,9 @@ fn csv_request_still_parses_json_error_payload() {
         fixture_bytes("tests/fixtures/csv_error_json_payload.json"),
         "text/csv",
     ));
-    let client = BojClient::new().with_base_url(server.base_url().to_string());
+    let client = BojClient::new()
+        .expect("default client should build")
+        .with_base_url(server.base_url().to_string());
 
     let query = CodeQuery::new("CO", vec!["TK99F1000601GCQ01000".to_string()])
         .unwrap()
@@ -48,7 +50,9 @@ fn gzip_json_response_is_decoded() {
         StubResponse::with_content_type(200, compressed, "application/json")
             .with_header("content-encoding", "gzip"),
     );
-    let client = BojClient::new().with_base_url(server.base_url().to_string());
+    let client = BojClient::new()
+        .expect("default client should build")
+        .with_base_url(server.base_url().to_string());
     let query = CodeQuery::new("CO", vec!["TK99F1000601GCQ01000".to_string()])
         .unwrap()
         .with_format(Format::Json)
@@ -73,7 +77,9 @@ fn metadata_response_is_typed() {
         fixture_bytes("tests/fixtures/json_success_metadata_api.json"),
         "application/json",
     ));
-    let client = BojClient::new().with_base_url(server.base_url().to_string());
+    let client = BojClient::new()
+        .expect("default client should build")
+        .with_base_url(server.base_url().to_string());
 
     let query = MetadataQuery::new("FM08")
         .unwrap()
@@ -90,7 +96,9 @@ fn metadata_response_is_typed() {
 
 #[test]
 fn transport_error_is_not_rewritten() {
-    let client = BojClient::new().with_base_url("http://127.0.0.1:1");
+    let client = BojClient::new()
+        .expect("default client should build")
+        .with_base_url("http://127.0.0.1:1");
     let query = MetadataQuery::new("PR01").unwrap();
 
     let error = client.get_metadata(&query).unwrap_err();
