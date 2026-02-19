@@ -99,6 +99,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 - `boj_get_parameter_catalog`
 - `boj_get_message_catalog`
 
+すべてのツールは `outputSchema` / `annotations` / `execution.taskSupport=forbidden` を公開します。
+
+### 追加MCP IF
+
+- Prompts:
+  - `boj_discovery_flow`
+  - `boj_fetch_data_code_flow`
+  - `boj_latest_value_flow`
+- Resources:
+  - `boj://guide/call-order`
+  - `boj://guide/input-normalization`
+  - `boj://catalog/databases`
+- Resource templates:
+  - `boj://catalog/parameters/{endpoint}`
+  - `boj://catalog/messages/{status}`
+- Completion:
+  - `db` / `format` / `lang` / `endpoint` / `status` / `frequency`
+
 ### npx実行
 
 ```bash
@@ -139,13 +157,24 @@ cargo run -p boj-mcp-server
 
 ### メンテナー向けリリース運用
 
-`mcp-release.yml` は `workflow_dispatch` で実行します。入力値 `version` は `mcp-server/Cargo.toml` と `npm/boj-mcp-server/package.json` の両方と一致している必要があります。`publish_npm=true` のときだけ npm 公開を実行します。
-npm 公開は GitHub Actions OIDC Trusted Publisher を使用するため、`NPM_TOKEN` は不要です（公開ジョブには `id-token: write` が必要です）。
+保護ブランチ前提の公式フローは次の通りです。
 
-`release-publish.yml` の crates.io 公開も GitHub Actions OIDC Trusted Publisher を使用するため、`CRATES_IO_TOKEN` は不要です。
+1. 版上げは必ずPRで実施し、`master` にマージします（workflowで版上げしません）。
+2. `release-publish.yml` を `workflow_dispatch` で実行します。
+   - 入力 `version`: ルート `Cargo.toml` の version と一致必須
+   - 入力 `dry_run=true`: release gate（fmt/clippy/doc/test/doc-test/contract/publish dry-run）のみ実行
+   - 入力 `dry_run=false`: gate 通過後に crates.io へ publish
+3. MCP配布が必要な場合は `mcp-release.yml` を実行します。
+   - 入力 `version`: `mcp-server/Cargo.toml` と `npm/boj-mcp-server/package.json` の両方と一致必須
+   - `publish_npm=false`: GitHub Release assets のみ公開
+   - `publish_npm=true`: assets公開後に npm 公開を実行（npm失敗時も summary で assets成功状態を確認可能）
+
+`release-publish.yml` の crates.io 公開と、`mcp-release.yml` の npm 公開は GitHub Actions OIDC Trusted Publisher を使用するため、`CRATES_IO_TOKEN` / `NPM_TOKEN` は不要です（公開ジョブには `id-token: write` が必要です）。
 
 `include_raw` を `true` にしたときだけ `raw` を返します。  
 `get_data_code` / `get_data_layer` は単ページ返却で、続き取得は `next_position` を指定して再実行してください。
+ツール実行失敗は JSON-RPC エラーではなく `CallToolResult` の `isError=true` と構造化エラーペイロードで返します。
+`format` / `lang` は `JSON` / `JP` のような大文字入力も受理し、内部で小文字正規化します。
 
 推奨呼び出し順（LLM/MCP利用時）:
 

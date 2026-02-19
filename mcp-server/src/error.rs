@@ -1,46 +1,51 @@
 use boj_client::error::BojError;
-use rmcp::ErrorData;
-use serde_json::json;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
-pub fn to_mcp_error(error: BojError) -> ErrorData {
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct ToolErrorOutput {
+    pub error_type: String,
+    pub message: String,
+    pub retryable: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub status: Option<u16>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub message_id: Option<String>,
+}
+
+pub fn to_tool_error(error: BojError) -> ToolErrorOutput {
     match error {
-        BojError::ValidationError(message) => ErrorData::invalid_params(
+        BojError::ValidationError(message) => ToolErrorOutput {
+            error_type: "VALIDATION_ERROR".to_string(),
             message,
-            Some(json!({
-                "error_type": "VALIDATION_ERROR"
-            })),
-        ),
-        BojError::TransportError(message) => ErrorData::internal_error(
-            "transport error while calling BOJ API",
-            Some(json!({
-                "error_type": "TRANSPORT_ERROR",
-                "message": message,
-            })),
-        ),
-        BojError::DecodeError(message) => ErrorData::internal_error(
-            "failed to decode BOJ API response",
-            Some(json!({
-                "error_type": "DECODE_ERROR",
-                "message": message,
-            })),
-        ),
+            retryable: false,
+            status: None,
+            message_id: None,
+        },
+        BojError::TransportError(message) => ToolErrorOutput {
+            error_type: "TRANSPORT_ERROR".to_string(),
+            message,
+            retryable: true,
+            status: None,
+            message_id: None,
+        },
+        BojError::DecodeError(message) => ToolErrorOutput {
+            error_type: "DECODE_ERROR".to_string(),
+            message,
+            retryable: false,
+            status: None,
+            message_id: None,
+        },
         BojError::ApiError {
             status,
             message_id,
             message,
-        } => {
-            let data = Some(json!({
-                "error_type": "API_ERROR",
-                "status": status,
-                "message_id": message_id,
-                "message": message,
-            }));
-
-            if status == 400 {
-                ErrorData::invalid_params("BOJ API returned an invalid-parameter response", data)
-            } else {
-                ErrorData::internal_error("BOJ API returned an error response", data)
-            }
-        }
+        } => ToolErrorOutput {
+            error_type: "API_ERROR".to_string(),
+            message,
+            retryable: status == 500 || status == 503,
+            status: Some(status),
+            message_id: Some(message_id),
+        },
     }
 }
