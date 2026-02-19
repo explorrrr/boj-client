@@ -30,7 +30,7 @@ The crate is available on `crates.io`. Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-boj-client = "0.2.0"
+boj-client = "0.3.0"
 ```
 
 ## Official references
@@ -74,7 +74,7 @@ use boj_client::client::BojClient;
 use boj_client::query::{CodeQuery, Format, Language};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = BojClient::new();
+    let client = BojClient::new()?;
     let query = CodeQuery::new("CO", vec!["TK99F1000601GCQ01000".to_string()])?
         .with_format(Format::Json)
         .with_lang(Language::En)
@@ -183,7 +183,11 @@ Recommended call order for LLM/MCP usage:
 3. `boj_get_data_code` / `boj_get_data_layer` / `boj_get_metadata` for data retrieval
 4. `boj_get_message_catalog` to resolve `MESSAGEID` details when needed
 
-## Public API Notes (0.2.0)
+## Public API Notes (0.3.0)
+
+- Breaking: `BojClient::new()` now returns `Result<BojClient, BojError>`.
+- Breaking: `Default` implementation for `BojClient` was removed.
+- The built-in default HTTP client now uses a 30-second timeout.
 
 - Client: `boj_client::client::BojClient`
 - Discovery catalog: `boj_client::catalog::*`

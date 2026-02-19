@@ -1,31 +1,27 @@
 use std::collections::HashMap;
+use std::time::Duration;
 
 use crate::error::BojError;
 
 use super::types::{HttpRequest, HttpResponse, Transport};
+const DEFAULT_TIMEOUT_SECONDS: u64 = 30;
 
 /// [`Transport`] implementation backed by `reqwest::blocking::Client`.
-///
-/// Use [`Default`] to get a client configured with
-/// `User-Agent: boj-client/<crate-version>`, or [`ReqwestTransport::new`] to
-/// inject a custom `reqwest` client.
-///
-/// # Examples
-///
-/// ```ignore
-/// use boj_client::transport::ReqwestTransport;
-///
-/// let _default_transport = ReqwestTransport::default();
-///
-/// let client = reqwest::blocking::Client::builder().build()?;
-/// let _custom_transport = ReqwestTransport::new(client);
-/// # Ok::<(), reqwest::Error>(())
-/// ```
 pub(crate) struct ReqwestTransport {
     client: reqwest::blocking::Client,
 }
 
 impl ReqwestTransport {
+    pub(crate) fn build_default_client() -> Result<reqwest::blocking::Client, BojError> {
+        reqwest::blocking::Client::builder()
+            .timeout(Duration::from_secs(DEFAULT_TIMEOUT_SECONDS))
+            .user_agent(format!("boj-client/{}", env!("CARGO_PKG_VERSION")))
+            .build()
+            .map_err(|error| {
+                BojError::transport(format!("failed to build default reqwest client: {error}"))
+            })
+    }
+
     /// Creates a transport from an existing `reqwest::blocking::Client`.
     ///
     /// # Examples
@@ -38,16 +34,6 @@ impl ReqwestTransport {
     /// # Ok::<(), reqwest::Error>(())
     /// ```
     pub(crate) fn new(client: reqwest::blocking::Client) -> Self {
-        Self { client }
-    }
-}
-
-impl Default for ReqwestTransport {
-    fn default() -> Self {
-        let client = reqwest::blocking::Client::builder()
-            .user_agent(format!("boj-client/{}", env!("CARGO_PKG_VERSION")))
-            .build()
-            .expect("failed to build reqwest client");
         Self { client }
     }
 }

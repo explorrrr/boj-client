@@ -36,6 +36,21 @@ mod tests {
     }
 
     #[test]
+    fn code_query_accepts_yyyyxx_and_rejects_invalid_suffix() {
+        let valid = CodeQuery::new("CO", vec!["TK99F1000601GCQ01000".to_string()])
+            .unwrap()
+            .with_start_date("202412")
+            .unwrap()
+            .with_end_date("202501");
+        assert!(valid.is_ok());
+
+        let invalid = CodeQuery::new("CO", vec!["TK99F1000601GCQ01000".to_string()])
+            .unwrap()
+            .with_start_date("202413");
+        assert!(matches!(invalid, Err(BojError::ValidationError(_))));
+    }
+
+    #[test]
     fn layer_query_enforces_layer_length_and_frequency_dates() {
         let too_many = LayerQuery::new(
             "BP01",

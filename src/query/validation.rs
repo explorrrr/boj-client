@@ -82,7 +82,7 @@ pub(super) fn validate_date_generic(value: &str) -> Result<(), BojError> {
             Ok(())
         }
         _ => Err(BojError::validation(
-            "date format must be YYYY or YYYYMM/HH/QQ",
+            "date format must be YYYY or YYYYXX (XX=01..12)",
         )),
     }
 }

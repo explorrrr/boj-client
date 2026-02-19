@@ -9,7 +9,8 @@ use super::validation::{validate_code, validate_date_generic, validate_date_orde
 /// - `DB` must be non-empty ASCII and must not contain commas.
 /// - `CODE` entries must be non-empty ASCII, must not contain commas, and
 ///   the number of entries must be between `1` and `1250`.
-/// - `startDate` and `endDate` must be `YYYY` or `YYYYMM`, and if both are set
+/// - `startDate` and `endDate` must be `YYYY` or `YYYYXX` (`XX=01..12`), and
+///   if both are set
 ///   they must have the same format and `startDate <= endDate`.
 ///
 /// # Examples
@@ -111,7 +112,7 @@ impl CodeQuery {
 
     /// Sets `startDate`.
     ///
-    /// Accepted format is `YYYY` or `YYYYMM`.
+    /// Accepted format is `YYYY` or `YYYYXX` (`XX=01..12`).
     ///
     /// # Examples
     ///
@@ -139,7 +140,7 @@ impl CodeQuery {
 
     /// Sets `endDate`.
     ///
-    /// Accepted format is `YYYY` or `YYYYMM`.
+    /// Accepted format is `YYYY` or `YYYYXX` (`XX=01..12`).
     ///
     /// # Examples
     ///

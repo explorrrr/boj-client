@@ -21,7 +21,7 @@ const DEFAULT_BASE_URL: &str = "https://www.stat-search.boj.or.jp";
 /// use boj_client::client::BojClient;
 /// use boj_client::query::{CodeQuery, Format, Language};
 ///
-/// let client = BojClient::new();
+/// let client = BojClient::new()?;
 /// let query = CodeQuery::new("CO", vec!["TK99F1000601GCQ01000".to_string()])?
 ///     .with_format(Format::Json)
 ///     .with_lang(Language::En)
@@ -35,19 +35,22 @@ pub struct BojClient {
     base_url: String,
 }
 
-impl Default for BojClient {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl BojClient {
     /// Creates a client with the default reqwest transport and BOJ base URL.
-    pub fn new() -> Self {
-        Self {
-            transport: ReqwestTransport::default(),
+    ///
+    /// The default transport uses:
+    /// - `User-Agent: boj-client/<crate-version>`
+    /// - request timeout of 30 seconds
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BojError`] when building the internal reqwest client fails.
+    pub fn new() -> Result<Self, BojError> {
+        let client = ReqwestTransport::build_default_client()?;
+        Ok(Self {
+            transport: ReqwestTransport::new(client),
             base_url: DEFAULT_BASE_URL.to_string(),
-        }
+        })
     }
 
     /// Creates a client from an existing `reqwest::blocking::Client`.

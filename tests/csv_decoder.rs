@@ -12,7 +12,9 @@ fn decodes_utf8_csv_code_response() {
         fixture_bytes("tests/fixtures/csv_success_en_utf8.csv"),
         "text/csv",
     ));
-    let client = BojClient::new().with_base_url(server.base_url().to_string());
+    let client = BojClient::new()
+        .expect("default client should build")
+        .with_base_url(server.base_url().to_string());
     let query = CodeQuery::new("CO", vec!["TK99F1000601GCQ01000".to_string()])
         .unwrap()
         .with_format(Format::Csv)
@@ -36,7 +38,9 @@ fn decodes_utf8_csv_layer_response() {
         fixture_bytes("tests/fixtures/csv_success_en_utf8.csv"),
         "text/csv",
     ));
-    let client = BojClient::new().with_base_url(server.base_url().to_string());
+    let client = BojClient::new()
+        .expect("default client should build")
+        .with_base_url(server.base_url().to_string());
     let query = LayerQuery::new("BP01", Frequency::M, vec!["1".to_string()])
         .unwrap()
         .with_format(Format::Csv)
@@ -57,7 +61,9 @@ fn decodes_shift_jis_csv() {
         fixture_bytes("tests/fixtures/csv_success_jp_shiftjis.csv"),
         "text/csv",
     ));
-    let client = BojClient::new().with_base_url(server.base_url().to_string());
+    let client = BojClient::new()
+        .expect("default client should build")
+        .with_base_url(server.base_url().to_string());
     let query = CodeQuery::new("CO", vec!["TK99F1000601GCQ01000".to_string()])
         .unwrap()
         .with_format(Format::Csv)
@@ -80,7 +86,9 @@ fn handles_utf8_bom_in_csv_header() {
         fixture_bytes("tests/fixtures/csv_success_jp_utf8_bom.csv"),
         "text/csv",
     ));
-    let client = BojClient::new().with_base_url(server.base_url().to_string());
+    let client = BojClient::new()
+        .expect("default client should build")
+        .with_base_url(server.base_url().to_string());
     let query = CodeQuery::new("CO", vec!["TK99F1000601GCQ01000".to_string()])
         .unwrap()
         .with_format(Format::Csv)
@@ -100,7 +108,9 @@ fn utf8_decode_fails_for_shift_jis_payload() {
         fixture_bytes("tests/fixtures/csv_success_jp_shiftjis.csv"),
         "text/csv",
     ));
-    let client = BojClient::new().with_base_url(server.base_url().to_string());
+    let client = BojClient::new()
+        .expect("default client should build")
+        .with_base_url(server.base_url().to_string());
     let query = CodeQuery::new("CO", vec!["TK99F1000601GCQ01000".to_string()])
         .unwrap()
         .with_format(Format::Csv)
@@ -119,7 +129,9 @@ fn decodes_metadata_csv() {
         fixture_bytes("tests/fixtures/csv_success_metadata_en_utf8.csv"),
         "text/csv",
     ));
-    let client = BojClient::new().with_base_url(server.base_url().to_string());
+    let client = BojClient::new()
+        .expect("default client should build")
+        .with_base_url(server.base_url().to_string());
     let query = MetadataQuery::new("FM08")
         .unwrap()
         .with_format(Format::Csv)
@@ -142,7 +154,9 @@ fn rejects_legacy_csv_shape() {
         fixture_bytes("tests/fixtures/csv_legacy_code_api.csv"),
         "text/csv",
     ));
-    let client = BojClient::new().with_base_url(server.base_url().to_string());
+    let client = BojClient::new()
+        .expect("default client should build")
+        .with_base_url(server.base_url().to_string());
     let query = CodeQuery::new("CO", vec!["TK99F1000601GCQ01000".to_string()])
         .unwrap()
         .with_format(Format::Csv)

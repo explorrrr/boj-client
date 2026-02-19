@@ -26,7 +26,7 @@ fn live_contract_matrix_all_api_all_formats() {
         return;
     }
 
-    let client = BojClient::new();
+    let client = BojClient::new().expect("default client should build");
 
     let mut cases = Vec::new();
     for format in [Format::Json, Format::Csv] {

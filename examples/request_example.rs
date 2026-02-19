@@ -3,7 +3,7 @@ use boj_client::error::BojError;
 use boj_client::query::{CodeQuery, Format, Frequency, Language, LayerQuery, MetadataQuery};
 
 fn main() -> Result<(), BojError> {
-    let client = BojClient::new();
+    let client = BojClient::new()?;
     run_all_requests(&client)
 }
 
