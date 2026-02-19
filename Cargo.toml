@@ -13,6 +13,10 @@ include = [
     "/LICENSE",
 ]
 
+[workspace]
+members = ["mcp-server"]
+resolver = "2"
+
 [dependencies]
 csv = "1.4.0"
 encoding_rs = "0.8.35"
