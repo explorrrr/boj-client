@@ -53,7 +53,8 @@ boj-client = "0.1.0"
 
 ## Quick links
 
-- [Contributing](./CONTRIBUTING.md)
+- [Contributing](./CONTRIBUTING.en.md)
+- [Contributing (Japanese)](./CONTRIBUTING.md)
 - [API manual](./docs/api-manual/README.md)
 - [API client design](./docs/design/api-client-versioning.md)
 - [License](./LICENSE)
