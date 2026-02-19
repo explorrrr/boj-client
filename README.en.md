@@ -99,6 +99,24 @@ This repository includes both the Rust MCP server binary `boj-mcp-server` and th
 - `boj_get_parameter_catalog`
 - `boj_get_message_catalog`
 
+Every tool exposes `outputSchema`, `annotations`, and `execution.taskSupport=forbidden`.
+
+### Additional MCP interfaces
+
+- Prompts:
+  - `boj_discovery_flow`
+  - `boj_fetch_data_code_flow`
+  - `boj_latest_value_flow`
+- Resources:
+  - `boj://guide/call-order`
+  - `boj://guide/input-normalization`
+  - `boj://catalog/databases`
+- Resource templates:
+  - `boj://catalog/parameters/{endpoint}`
+  - `boj://catalog/messages/{status}`
+- Completion:
+  - `db` / `format` / `lang` / `endpoint` / `status` / `frequency`
+
 ### Run with npx
 
 ```bash
@@ -139,13 +157,24 @@ cargo run -p boj-mcp-server
 
 ### Maintainer release flow
 
-`mcp-release.yml` is executed via `workflow_dispatch`. The `version` input must match both `mcp-server/Cargo.toml` and `npm/boj-mcp-server/package.json`. npm publication runs only when `publish_npm=true`.
-npm publication uses GitHub Actions OIDC trusted publishing, so `NPM_TOKEN` is not required (the publish job must have `id-token: write`).
+The official flow (with protected branch rules) is:
 
-`release-publish.yml` also uses GitHub Actions OIDC trusted publishing for crates.io publication, so `CRATES_IO_TOKEN` is not required.
+1. Always bump versions in a PR, then merge into `master` (no workflow-driven version bump).
+2. Run `release-publish.yml` via `workflow_dispatch`.
+   - Input `version`: must match the root `Cargo.toml` version
+   - Input `dry_run=true`: run release gate only (fmt/clippy/doc/test/doc-test/contract/publish dry-run)
+   - Input `dry_run=false`: publish to crates.io after the gate passes
+3. If MCP distribution is required, run `mcp-release.yml`.
+   - Input `version`: must match both `mcp-server/Cargo.toml` and `npm/boj-mcp-server/package.json`
+   - `publish_npm=false`: publish GitHub Release assets only
+   - `publish_npm=true`: publish npm package after assets upload (workflow summary still shows assets success when npm publish fails)
+
+Both crates.io publication in `release-publish.yml` and npm publication in `mcp-release.yml` use GitHub Actions OIDC trusted publishing, so `CRATES_IO_TOKEN` / `NPM_TOKEN` are not required (`id-token: write` is required for publish jobs).
 
 `raw` is returned only when `include_raw=true`.  
 `get_data_code` and `get_data_layer` are single-page responses; use `next_position` to request the next page.
+Tool execution failures are returned as `CallToolResult` with `isError=true` and structured error payloads (instead of JSON-RPC errors).
+`format` / `lang` also accept uppercase inputs such as `JSON` / `JP` and are normalized internally.
 
 Recommended call order for LLM/MCP usage:
 

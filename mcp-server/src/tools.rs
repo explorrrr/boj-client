@@ -3,16 +3,18 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, JsonSchema)]
-#[serde(rename_all = "lowercase")]
 pub enum FormatParam {
+    #[serde(rename = "json", alias = "JSON", alias = "Json")]
     Json,
+    #[serde(rename = "csv", alias = "CSV", alias = "Csv")]
     Csv,
 }
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, JsonSchema)]
-#[serde(rename_all = "lowercase")]
 pub enum LanguageParam {
+    #[serde(rename = "jp", alias = "JP", alias = "Jp")]
     Jp,
+    #[serde(rename = "en", alias = "EN", alias = "En")]
     En,
 }
 
@@ -196,6 +198,8 @@ pub struct ParameterCatalogOutput {
     pub general_notes: Vec<String>,
     pub format_codes: Vec<String>,
     pub language_codes: Vec<String>,
+    pub mcp_format_codes: Vec<String>,
+    pub mcp_language_codes: Vec<String>,
     pub frequency_codes: Vec<String>,
     pub parameters: Vec<ParameterCatalogEntryOutput>,
     pub limits: Vec<RequestLimitOutput>,

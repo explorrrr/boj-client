@@ -242,6 +242,14 @@ pub fn to_parameter_catalog_output(endpoint: EndpointScopeParam) -> ParameterCat
             .iter()
             .map(|value| (*value).to_string())
             .collect(),
+        mcp_format_codes: catalog::format_codes()
+            .iter()
+            .map(|value| value.to_ascii_lowercase())
+            .collect(),
+        mcp_language_codes: catalog::language_codes()
+            .iter()
+            .map(|value| value.to_ascii_lowercase())
+            .collect(),
         frequency_codes: frequency_codes_for_scope(endpoint),
         parameters,
         limits,
@@ -331,6 +339,17 @@ fn endpoint_scope_name(endpoint: EndpointScopeParam) -> &'static str {
         EndpointScopeParam::GetDataCode => "getDataCode",
         EndpointScopeParam::GetDataLayer => "getDataLayer",
         EndpointScopeParam::GetMetadata => "getMetadata",
+    }
+}
+
+pub fn parse_endpoint_scope(value: &str) -> Option<EndpointScopeParam> {
+    let normalized = value.trim().to_ascii_lowercase();
+    match normalized.as_str() {
+        "all" => Some(EndpointScopeParam::All),
+        "get_data_code" | "getdatacode" => Some(EndpointScopeParam::GetDataCode),
+        "get_data_layer" | "getdatalayer" => Some(EndpointScopeParam::GetDataLayer),
+        "get_metadata" | "getmetadata" => Some(EndpointScopeParam::GetMetadata),
+        _ => None,
     }
 }
 

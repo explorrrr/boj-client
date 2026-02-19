@@ -3,7 +3,14 @@
 `boj-mcp-server` is an MCP server binary that exposes BOJ API access through `boj-client`.
 The repository also provides an `npx` launcher package: `@explorrrr/boj-mcp-server`.
 
-## Tools
+## Protocol
+
+- Target protocol version: `2025-11-25`
+- Transport: MCP `stdio`
+
+## MCP Surface
+
+### Tools
 
 - `boj_get_data_code`
 - `boj_get_data_layer`
@@ -11,6 +18,40 @@ The repository also provides an `npx` launcher package: `@explorrrr/boj-mcp-serv
 - `boj_list_databases`
 - `boj_get_parameter_catalog`
 - `boj_get_message_catalog`
+
+All tools expose:
+
+- `outputSchema`
+- `annotations` (`readOnly`, `idempotent`, non-destructive hints)
+- `execution.taskSupport = forbidden`
+
+### Prompts
+
+- `boj_discovery_flow`
+- `boj_fetch_data_code_flow`
+- `boj_latest_value_flow`
+
+### Resources
+
+- `boj://guide/call-order`
+- `boj://guide/input-normalization`
+- `boj://catalog/databases`
+
+### Resource templates
+
+- `boj://catalog/parameters/{endpoint}`
+- `boj://catalog/messages/{status}`
+
+### Completion
+
+`completion/complete` supports prefix completion for:
+
+- `db`
+- `format`
+- `lang`
+- `endpoint`
+- `status`
+- `frequency`
 
 ## Run
 
@@ -54,11 +95,15 @@ npx -y @explorrrr/boj-mcp-server --help
 
 - Responses are single-page. Use `next_position` for subsequent calls.
 - `raw` is omitted unless `include_raw=true`.
-- Recommended discovery flow:
-  1. `boj_list_databases`
-  2. `boj_get_parameter_catalog`
-  3. `boj_get_data_code` / `boj_get_data_layer` / `boj_get_metadata`
-  4. `boj_get_message_catalog` when decoding `MESSAGEID`
+- Tool execution failures are returned as `CallToolResult` with `isError=true` and structured error payload.
+- `format` and `lang` accept uppercase input (`JSON`/`JP`) and are normalized internally.
+
+Recommended discovery flow:
+
+1. `boj_list_databases`
+2. `boj_get_parameter_catalog`
+3. `boj_get_data_code` / `boj_get_data_layer` / `boj_get_metadata`
+4. `boj_get_message_catalog` when decoding `MESSAGEID`
 
 ## Release workflow
 
