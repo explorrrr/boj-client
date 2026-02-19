@@ -64,7 +64,33 @@ Runtime config (CLI args and env vars):
 
 ## 7. Distribution
 
-`mcp-release.yml` builds release binaries for Linux/macOS and publishes archives with checksums on tag pushes (`mcp-server-v*`).
+Distribution is split into two layers:
+
+- Rust binary release assets (`boj-mcp-server-*`)
+- npm launcher package (`@explorrrr/boj-mcp-server`) for `npx`
+
+`mcp-release.yml` runs via `workflow_dispatch` and validates version consistency across:
+
+- workflow input `version`
+- `mcp-server/Cargo.toml`
+- `npm/boj-mcp-server/package.json`
+
+Supported release targets:
+
+- `x86_64-unknown-linux-gnu`
+- `x86_64-apple-darwin`
+- `aarch64-apple-darwin`
+- `x86_64-pc-windows-msvc`
+
+Release assets follow fixed names:
+
+- `boj-mcp-server-x86_64-unknown-linux-gnu.tar.gz`
+- `boj-mcp-server-x86_64-apple-darwin.tar.gz`
+- `boj-mcp-server-aarch64-apple-darwin.tar.gz`
+- `boj-mcp-server-x86_64-pc-windows-msvc.tar.gz`
+- `SHA256SUMS`
+
+The npm launcher downloads the correct asset for the current platform on first run, validates it with `SHA256SUMS`, caches it locally, and then executes the binary over `stdio`.
 
 ## 8. Compatibility
 

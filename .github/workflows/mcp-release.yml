@@ -2,21 +2,133 @@ name: MCP Server Release
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - "mcp-server-v*"
+    inputs:
+      version:
+        description: "MCP server version to release (e.g. 0.1.0)"
+        required: true
+        type: string
+      publish_npm:
+        description: "Publish @explorrrr/boj-mcp-server to npm"
+        required: true
+        type: boolean
+        default: false
+      npm_dist_tag:
+        description: "npm dist-tag used when publish_npm=true"
+        required: true
+        type: string
+        default: latest
 
 permissions:
   contents: read
 
 jobs:
+  validate:
+    name: Validate release inputs and versions
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.versions.outputs.version }}
+      tag: ${{ steps.versions.outputs.tag }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure workflow runs from master
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_REF_NAME}" != "master" ]; then
+            echo "Dispatch this workflow from master."
+            exit 1
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Validate input version and package versions
+        id: versions
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          input_version="${{ inputs.version }}"
+          if ! [[ "${input_version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.]+)?$ ]]; then
+            echo "Invalid version format: ${input_version}"
+            exit 1
+          fi
+
+          cargo_version="$(sed -nE 's/^version = \"([^\"]+)\"$/\1/p' mcp-server/Cargo.toml | head -n 1)"
+          npm_version="$(node -p \"require('./npm/boj-mcp-server/package.json').version\")"
+
+          if [ -z "${cargo_version}" ] || [ -z "${npm_version}" ]; then
+            echo "Failed to resolve versions from mcp-server/Cargo.toml or npm package."
+            exit 1
+          fi
+
+          if [ "${input_version}" != "${cargo_version}" ]; then
+            echo "Version mismatch: input=${input_version}, cargo=${cargo_version}"
+            exit 1
+          fi
+
+          if [ "${input_version}" != "${npm_version}" ]; then
+            echo "Version mismatch: input=${input_version}, npm=${npm_version}"
+            exit 1
+          fi
+
+          if [ -z "${{ inputs.npm_dist_tag }}" ]; then
+            echo "npm_dist_tag must not be empty."
+            exit 1
+          fi
+
+          echo "version=${input_version}" >> "${GITHUB_OUTPUT}"
+          echo "tag=mcp-server-v${input_version}" >> "${GITHUB_OUTPUT}"
+
+  test_launcher:
+    name: Test npm launcher package
+    runs-on: ubuntu-latest
+    needs: validate
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install npm dependencies
+        working-directory: npm/boj-mcp-server
+        run: npm install --no-package-lock
+
+      - name: Run npm tests
+        working-directory: npm/boj-mcp-server
+        run: npm test
+
   build:
     name: Build MCP server binaries
     runs-on: ${{ matrix.os }}
+    needs: [validate, test_launcher]
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            exe_suffix: ""
+          - os: macos-13
+            target: x86_64-apple-darwin
+            exe_suffix: ""
+          - os: macos-14
+            target: aarch64-apple-darwin
+            exe_suffix: ""
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            exe_suffix: ".exe"
 
     steps:
       - name: Checkout repository
@@ -26,40 +138,71 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Build release binary
-        run: cargo build --release -p boj-mcp-server
-
-      - name: Package binary
         shell: bash
         run: |
           set -euo pipefail
-          BIN_NAME="boj-mcp-server"
-          OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
-          ARCH="$(uname -m)"
-          PACKAGE_NAME="${BIN_NAME}-${OS}-${ARCH}"
+          cargo build --release -p boj-mcp-server --target "${{ matrix.target }}"
 
-          mkdir -p "${PACKAGE_NAME}"
-          cp "target/release/${BIN_NAME}" "${PACKAGE_NAME}/"
-          tar -czf "${PACKAGE_NAME}.tar.gz" "${PACKAGE_NAME}"
-          shasum -a 256 "${PACKAGE_NAME}.tar.gz" > "${PACKAGE_NAME}.sha256"
+      - name: Package target binary
+        id: package
+        shell: bash
+        run: |
+          set -euo pipefail
+          asset_name="boj-mcp-server-${{ matrix.target }}.tar.gz"
+          binary_path="target/${{ matrix.target }}/release/boj-mcp-server${{ matrix.exe_suffix }}"
+          dist_dir="dist-${{ matrix.target }}"
+
+          if [ ! -f "${binary_path}" ]; then
+            echo "Expected binary not found: ${binary_path}"
+            exit 1
+          fi
+
+          mkdir -p "${dist_dir}"
+          cp "${binary_path}" "${dist_dir}/boj-mcp-server${{ matrix.exe_suffix }}"
+          tar -czf "${asset_name}" -C "${dist_dir}" "boj-mcp-server${{ matrix.exe_suffix }}"
+
+          echo "asset_name=${asset_name}" >> "${GITHUB_OUTPUT}"
+
+      - name: Generate checksum entry
+        shell: bash
+        env:
+          ASSET_NAME: ${{ steps.package.outputs.asset_name }}
+          CHECKSUM_FILE: sha256-${{ matrix.target }}.txt
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib
+          import os
+          from pathlib import Path
+
+          asset_path = Path(os.environ["ASSET_NAME"])
+          checksum_file = Path(os.environ["CHECKSUM_FILE"])
+          digest = hashlib.sha256(asset_path.read_bytes()).hexdigest()
+          checksum_file.write_text(f"{digest}  {asset_path.name}\n", encoding="utf-8")
+          PY
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: mcp-server-${{ matrix.os }}
+          name: mcp-server-${{ matrix.target }}
           path: |
-            boj-mcp-server-*.tar.gz
-            boj-mcp-server-*.sha256
+            ${{ steps.package.outputs.asset_name }}
+            sha256-${{ matrix.target }}.txt
 
-  publish:
-    name: Publish GitHub release assets
-    if: startsWith(github.ref, 'refs/tags/')
-    needs: build
+  release:
+    name: Create or update GitHub release
     runs-on: ubuntu-latest
+    needs: [validate, build]
     permissions:
       contents: write
 
     steps:
-      - name: Download artifacts
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           path: dist
@@ -70,11 +213,52 @@ jobs:
         run: |
           set -euo pipefail
           cd dist
-          cat ./*.sha256 > SHA256SUMS
+          cat sha256-*.txt > SHA256SUMS
+          ls -1 *.tar.gz SHA256SUMS
 
-      - name: Attach release assets
-        uses: softprops/action-gh-release@v2
+      - name: Create or update release assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="${{ needs.validate.outputs.tag }}"
+          version="${{ needs.validate.outputs.version }}"
+          title="MCP Server ${version}"
+
+          if gh release view "${tag}" >/dev/null 2>&1; then
+            echo "Release ${tag} already exists. Uploading updated assets."
+          else
+            gh release create "${tag}" \
+              --target "${GITHUB_SHA}" \
+              --title "${title}" \
+              --notes "Release assets for boj-mcp-server ${version}."
+          fi
+
+          gh release upload "${tag}" dist/*.tar.gz dist/SHA256SUMS --clobber
+
+  publish_npm:
+    name: Publish npm package
+    runs-on: ubuntu-latest
+    needs: [validate, release]
+    if: ${{ inputs.publish_npm }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          files: |
-            dist/*.tar.gz
-            dist/SHA256SUMS
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: npm pack dry-run
+        working-directory: npm/boj-mcp-server
+        run: npm pack --dry-run
+
+      - name: Publish to npm
+        working-directory: npm/boj-mcp-server
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public --tag "${{ inputs.npm_dist_tag }}"

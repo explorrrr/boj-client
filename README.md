@@ -86,9 +86,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-## MCPサーバー（stdio）
+## MCPサーバー（stdio / npx）
 
-このリポジトリには、`boj-client` を MCP 経由で利用するための `boj-mcp-server`（Rustバイナリ）が同梱されています。
+このリポジトリには、`boj-client` を MCP 経由で利用するための `boj-mcp-server`（Rustバイナリ）と、`npx` ランチャー `@explorrrr/boj-mcp-server` が同梱されています。
 
 ### 提供ツール
 
@@ -96,24 +96,47 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 - `boj_get_data_layer`
 - `boj_get_metadata`
 
-### ローカル実行
+### npx実行
+
+```bash
+npx -y @explorrrr/boj-mcp-server --help
+```
+
+### ローカル開発実行（Rust）
 
 ```bash
 cargo run -p boj-mcp-server
 ```
 
-### MCPクライアント設定例
+### MCPクライアント設定例（npx）
 
 ```json
 {
   "mcpServers": {
     "boj": {
-      "command": "/absolute/path/to/boj-mcp-server",
-      "args": []
+      "command": "npx",
+      "args": ["-y", "@explorrrr/boj-mcp-server"]
     }
   }
 }
 ```
+
+### ランチャー用環境変数
+
+- `BOJ_MCP_SERVER_PATH`: 既存バイナリを直接使う（ダウンロードをスキップ）
+- `BOJ_MCP_CACHE_DIR`: ダウンロード済みバイナリのキャッシュ先
+- `BOJ_MCP_RELEASE_BASE_URL`: 取得元のReleaseベースURL（既定: `https://github.com/explorrrr/boj-client/releases/download`）
+
+### サポート対象
+
+- `linux-x64`
+- `darwin-x64`
+- `darwin-arm64`
+- `win32-x64`
+
+### メンテナー向けリリース運用
+
+`mcp-release.yml` は `workflow_dispatch` で実行します。入力値 `version` は `mcp-server/Cargo.toml` と `npm/boj-mcp-server/package.json` の両方と一致している必要があります。`publish_npm=true` のときだけ npm 公開を実行します。
 
 `include_raw` を `true` にしたときだけ `raw` を返します。  
 `get_data_code` / `get_data_layer` は単ページ返却で、続き取得は `next_position` を指定して再実行してください。
