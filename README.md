@@ -54,6 +54,7 @@ boj-client = "0.1.0"
 ## クイックリンク
 
 - [Contributing](./CONTRIBUTING.md)
+- [Contributing (English)](./CONTRIBUTING.en.md)
 - [APIマニュアル](./docs/api-manual/README.md)
 - [APIクライアント設計](./docs/design/api-client-versioning.md)
 - [ライセンス](./LICENSE)
@@ -101,6 +102,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 ## Contributing
 
 寄稿方法は [`CONTRIBUTING.md`](./CONTRIBUTING.md) を参照してください。
+英語版は [`CONTRIBUTING.en.md`](./CONTRIBUTING.en.md) を参照してください。
 
 ## 対応範囲と制約
 
