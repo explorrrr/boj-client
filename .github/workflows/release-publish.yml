@@ -25,6 +25,11 @@ on:
         required: true
         type: boolean
         default: true
+      publish_only:
+        description: "Skip release commit/tag steps and publish the current master version"
+        required: true
+        type: boolean
+        default: false
 
 concurrency:
   group: release-publish
@@ -73,6 +78,7 @@ jobs:
   prepare_release:
     name: Prepare release commit and tag
     needs: verify
+    if: ${{ !inputs.publish_only }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -150,10 +156,38 @@ jobs:
           tag="v${{ steps.initial_version.outputs.crate_version }}"
           git push origin "${tag}"
 
-  publish:
+  publish_after_prepare:
     name: Publish crate
     needs: prepare_release
-    if: ${{ !inputs.dry_run }}
+    if: ${{ !inputs.dry_run && !inputs.publish_only }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout master with full history
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Authenticate to crates.io (trusted publishing)
+        id: auth
+        uses: rust-lang/crates-io-auth-action@v1
+
+      - name: Publish to crates.io
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+        run: cargo publish
+
+  publish_existing_master:
+    name: Publish crate (existing master version)
+    needs: verify
+    if: ${{ !inputs.dry_run && inputs.publish_only }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
