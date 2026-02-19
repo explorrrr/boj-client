@@ -56,7 +56,8 @@ jobs:
           set -euo pipefail
 
           input_version="${{ inputs.version }}"
-          if ! [[ "${input_version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.]+)?$ ]]; then
+          version_pattern='^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.]+)?$'
+          if ! printf '%s\n' "${input_version}" | grep -Eq "${version_pattern}"; then
             echo "Invalid version format: ${input_version}"
             exit 1
           fi
