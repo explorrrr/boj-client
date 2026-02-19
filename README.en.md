@@ -137,6 +137,9 @@ cargo run -p boj-mcp-server
 ### Maintainer release flow
 
 `mcp-release.yml` is executed via `workflow_dispatch`. The `version` input must match both `mcp-server/Cargo.toml` and `npm/boj-mcp-server/package.json`. npm publication runs only when `publish_npm=true`.
+npm publication uses GitHub Actions OIDC trusted publishing, so `NPM_TOKEN` is not required (the publish job must have `id-token: write`).
+
+`release-publish.yml` also uses GitHub Actions OIDC trusted publishing for crates.io publication, so `CRATES_IO_TOKEN` is not required.
 
 `raw` is returned only when `include_raw=true`.  
 `get_data_code` and `get_data_layer` are single-page responses; use `next_position` to request the next page.

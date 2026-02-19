@@ -137,6 +137,9 @@ cargo run -p boj-mcp-server
 ### メンテナー向けリリース運用
 
 `mcp-release.yml` は `workflow_dispatch` で実行します。入力値 `version` は `mcp-server/Cargo.toml` と `npm/boj-mcp-server/package.json` の両方と一致している必要があります。`publish_npm=true` のときだけ npm 公開を実行します。
+npm 公開は GitHub Actions OIDC Trusted Publisher を使用するため、`NPM_TOKEN` は不要です（公開ジョブには `id-token: write` が必要です）。
+
+`release-publish.yml` の crates.io 公開も GitHub Actions OIDC Trusted Publisher を使用するため、`CRATES_IO_TOKEN` は不要です。
 
 `include_raw` を `true` にしたときだけ `raw` を返します。  
 `get_data_code` / `get_data_layer` は単ページ返却で、続き取得は `next_position` を指定して再実行してください。

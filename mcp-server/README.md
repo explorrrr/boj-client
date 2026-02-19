@@ -62,3 +62,4 @@ The workflow validates that these versions match:
 - `npm/boj-mcp-server/package.json`
 
 When `publish_npm=true`, the workflow also publishes `@explorrrr/boj-mcp-server`.
+The npm publish job uses GitHub Actions OIDC trusted publishing and therefore does not require `NPM_TOKEN` (`id-token: write` is required).
