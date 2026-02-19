@@ -245,6 +245,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [validate, release]
     if: ${{ inputs.publish_npm }}
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - name: Checkout repository
@@ -253,7 +256,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           registry-url: "https://registry.npmjs.org"
 
       - name: npm pack dry-run
@@ -262,6 +265,4 @@ jobs:
 
       - name: Publish to npm
         working-directory: npm/boj-mcp-server
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --access public --tag "${{ inputs.npm_dist_tag }}"

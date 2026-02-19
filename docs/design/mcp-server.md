@@ -75,6 +75,8 @@ Distribution is split into two layers:
 - `mcp-server/Cargo.toml`
 - `npm/boj-mcp-server/package.json`
 
+The npm publish job in `mcp-release.yml` uses GitHub Actions OIDC trusted publishing and does not use long-lived npm tokens. The publish job must grant `id-token: write`.
+
 Supported release targets:
 
 - `x86_64-unknown-linux-gnu`
