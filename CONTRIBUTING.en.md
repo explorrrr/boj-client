@@ -5,7 +5,7 @@ This document defines the contribution workflow for `boj-client`.
 ## 1. Purpose and Scope
 
 - In scope: Feature additions, bug fixes, test additions, and documentation updates by external contributors
-- Out of scope: Release and publishing operations for maintainers (for example, the `release-publish` workflow)
+- Out of scope: Maintainer-authorized release execution itself (workflow_dispatch permissions are required)
 
 ## 2. Setup
 
@@ -140,3 +140,17 @@ The work is considered complete when all of the following are satisfied:
 - Necessary tests are added or updated
 - Specification references and implementation are consistent
 - PR template is filled out
+
+## 13. Maintainer Release Flow (Reference)
+
+This is the publication flow under protected-branch operation (PR required). The old path where a workflow directly pushes release changes to `master` is not used.
+
+1. Bump versions in a PR and merge into `master`
+2. Run `release-publish.yml` via `workflow_dispatch`
+   - Input `version`: must match the root `Cargo.toml` version
+   - Input `dry_run=true`: run release gate only
+   - Input `dry_run=false`: publish to crates.io after the gate passes
+3. If MCP publication is required, run `mcp-release.yml`
+   - Input `version`: must match both `mcp-server/Cargo.toml` and `npm/boj-mcp-server/package.json`
+   - `publish_npm=false`: publish GitHub Release assets only
+   - `publish_npm=true`: publish npm package after assets upload (summary still shows assets status if npm publish fails)

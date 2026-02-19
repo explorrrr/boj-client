@@ -5,7 +5,7 @@
 ## 1. 目的と対象範囲
 
 - 対象: 外部Contributorによる機能追加、バグ修正、テスト追加、ドキュメント更新
-- 本書の範囲外: maintainer向けのリリース公開運用（`release-publish` workflow など）
+- 本書の範囲外: maintainer権限でのリリース公開実行（workflow_dispatch 実行権限が必要）
 
 ## 2. セットアップ
 
@@ -140,3 +140,17 @@ cargo insta test --force-update-snapshots
 - 必要なテストが追加または更新されている
 - 仕様参照と実装が整合している
 - PRテンプレートが記入されている
+
+## 13. メンテナー向けリリースフロー（参照）
+
+保護ブランチ運用（PR必須）を前提とした公開手順です。版上げを workflow が直接 `master` に push する運用は行いません。
+
+1. 版上げはPRで実施し、`master` にマージする
+2. `release-publish.yml` を `workflow_dispatch` で実行する
+   - 入力 `version`: ルート `Cargo.toml` と一致必須
+   - 入力 `dry_run=true`: release gate のみ実行
+   - 入力 `dry_run=false`: gate 通過後に crates.io publish
+3. MCP公開が必要な場合は `mcp-release.yml` を実行する
+   - 入力 `version`: `mcp-server/Cargo.toml` と `npm/boj-mcp-server/package.json` の両方と一致必須
+   - `publish_npm=false`: GitHub Release assets のみ公開
+   - `publish_npm=true`: assets公開後に npm 公開（失敗時も summary で assets成否を確認可能）

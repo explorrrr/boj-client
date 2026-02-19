@@ -270,3 +270,48 @@ jobs:
       - name: Publish to npm
         working-directory: npm/boj-mcp-server
         run: npm publish --access public --tag "${{ inputs.npm_dist_tag }}"
+
+  release_summary:
+    name: Release summary
+    runs-on: ubuntu-latest
+    needs: [validate, release, publish_npm]
+    if: ${{ always() }}
+
+    steps:
+      - name: Write workflow summary
+        shell: bash
+        env:
+          VERSION_INPUT: ${{ inputs.version }}
+          VERSION_RESOLVED: ${{ needs.validate.outputs.version }}
+          RELEASE_RESULT: ${{ needs.release.result }}
+          PUBLISH_NPM_ENABLED: ${{ inputs.publish_npm }}
+          PUBLISH_NPM_RESULT: ${{ needs.publish_npm.result }}
+          NPM_DIST_TAG: ${{ inputs.npm_dist_tag }}
+        run: |
+          set -euo pipefail
+          version="${VERSION_RESOLVED}"
+          if [ -z "${version}" ]; then
+            version="${VERSION_INPUT}"
+          fi
+
+          {
+            echo "## MCP Release Summary"
+            echo "- version: \`${version}\`"
+
+            if [ "${RELEASE_RESULT}" = "success" ]; then
+              echo "- GitHub Release assets: success"
+            else
+              echo "- GitHub Release assets: ${RELEASE_RESULT}"
+            fi
+
+            if [ "${PUBLISH_NPM_ENABLED}" != "true" ]; then
+              echo "- npm publish: skipped (publish_npm=false)"
+            elif [ "${PUBLISH_NPM_RESULT}" = "success" ]; then
+              echo "- npm publish: success (dist-tag: \`${NPM_DIST_TAG}\`)"
+            else
+              echo "- npm publish: ${PUBLISH_NPM_RESULT}"
+              if [ "${RELEASE_RESULT}" = "success" ]; then
+                echo "- note: GitHub Release assets were already published successfully."
+              fi
+            fi
+          } >> "${GITHUB_STEP_SUMMARY}"
