@@ -30,7 +30,7 @@ The crate is available on `crates.io`. Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-boj-client = "0.1.0"
+boj-client = "0.2.0"
 ```
 
 ## Official references
@@ -154,7 +154,7 @@ Recommended call order for LLM/MCP usage:
 3. `boj_get_data_code` / `boj_get_data_layer` / `boj_get_metadata` for data retrieval
 4. `boj_get_message_catalog` to resolve `MESSAGEID` details when needed
 
-## Public API Notes (0.1.0)
+## Public API Notes (0.2.0)
 
 - Client: `boj_client::client::BojClient`
 - Discovery catalog: `boj_client::catalog::*`

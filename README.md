@@ -30,7 +30,7 @@
 
 ```toml
 [dependencies]
-boj-client = "0.1.0"
+boj-client = "0.2.0"
 ```
 
 ## 公式情報（参照元）
@@ -154,7 +154,7 @@ npm 公開は GitHub Actions OIDC Trusted Publisher を使用するため、`NPM
 3. `boj_get_data_code` / `boj_get_data_layer` / `boj_get_metadata` を実行
 4. 必要に応じて `boj_get_message_catalog` で `MESSAGEID` を参照
 
-## 公開APIノート（0.1.0）
+## 公開APIノート（0.2.0）
 
 - クライアント: `boj_client::client::BojClient`
 - ディスカバリ辞書: `boj_client::catalog::*`
