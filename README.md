@@ -95,6 +95,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 - `boj_get_data_code`
 - `boj_get_data_layer`
 - `boj_get_metadata`
+- `boj_list_databases`
+- `boj_get_parameter_catalog`
+- `boj_get_message_catalog`
 
 ### npx実行
 
@@ -144,9 +147,17 @@ npm 公開は GitHub Actions OIDC Trusted Publisher を使用するため、`NPM
 `include_raw` を `true` にしたときだけ `raw` を返します。  
 `get_data_code` / `get_data_layer` は単ページ返却で、続き取得は `next_position` を指定して再実行してください。
 
+推奨呼び出し順（LLM/MCP利用時）:
+
+1. `boj_list_databases` でDB候補を取得
+2. `boj_get_parameter_catalog` で入力制約と上限制約を確認
+3. `boj_get_data_code` / `boj_get_data_layer` / `boj_get_metadata` を実行
+4. 必要に応じて `boj_get_message_catalog` で `MESSAGEID` を参照
+
 ## 公開APIノート（0.1.0）
 
 - クライアント: `boj_client::client::BojClient`
+- ディスカバリ辞書: `boj_client::catalog::*`
 - クエリとオプション: `boj_client::query::*`
 - レスポンス型: `boj_client::model::*`
 - `decode` / `transport` は内部実装となり、公開されません

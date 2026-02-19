@@ -8,6 +8,9 @@ The repository also provides an `npx` launcher package: `@explorrrr/boj-mcp-serv
 - `boj_get_data_code`
 - `boj_get_data_layer`
 - `boj_get_metadata`
+- `boj_list_databases`
+- `boj_get_parameter_catalog`
+- `boj_get_message_catalog`
 
 ## Run
 
@@ -51,6 +54,11 @@ npx -y @explorrrr/boj-mcp-server --help
 
 - Responses are single-page. Use `next_position` for subsequent calls.
 - `raw` is omitted unless `include_raw=true`.
+- Recommended discovery flow:
+  1. `boj_list_databases`
+  2. `boj_get_parameter_catalog`
+  3. `boj_get_data_code` / `boj_get_data_layer` / `boj_get_metadata`
+  4. `boj_get_message_catalog` when decoding `MESSAGEID`
 
 ## Release workflow
 

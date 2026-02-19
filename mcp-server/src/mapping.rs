@@ -1,11 +1,15 @@
+use boj_client::catalog;
 use boj_client::error::BojError;
 use boj_client::model::{CodeResponse, LayerResponse, MetadataResponse, ResponseMeta};
 use boj_client::query::{CodeQuery, Format, Frequency, Language, LayerQuery, MetadataQuery};
 use serde_json::Value;
 
 use crate::tools::{
-    CodeToolOutput, FormatParam, FrequencyParam, GetDataCodeInput, GetDataLayerInput,
-    GetMetadataInput, LanguageParam, LayerToolOutput, MetaOutput, MetadataToolOutput,
+    CodeToolOutput, DatabaseCatalogEntryOutput, EndpointScopeParam, FormatParam, FrequencyParam,
+    GetDataCodeInput, GetDataLayerInput, GetMetadataInput, LanguageParam, LayerToolOutput,
+    ListDatabasesOutput, MessageCatalogEntryOutput, MessageCatalogOutput, MetaOutput,
+    MetadataToolOutput, ParameterCatalogEntryOutput, ParameterCatalogOutput, RequestLimitOutput,
+    RequirementMatrixOutput,
 };
 
 impl From<FormatParam> for Format {
@@ -172,6 +176,164 @@ pub fn to_metadata_output(response: MetadataResponse, include_raw: bool) -> Meta
     }
 }
 
+pub fn to_list_databases_output() -> ListDatabasesOutput {
+    let snapshot = catalog::snapshot();
+    let databases = catalog::databases()
+        .iter()
+        .map(|entry| DatabaseCatalogEntryOutput {
+            category_ja: entry.category_ja.to_string(),
+            code: entry.code.to_string(),
+            name_ja: entry.name_ja.to_string(),
+        })
+        .collect::<Vec<_>>();
+
+    ListDatabasesOutput {
+        source_document: snapshot.source_document.to_string(),
+        source_date: snapshot.source_date.to_string(),
+        count: databases.len(),
+        databases,
+    }
+}
+
+pub fn to_parameter_catalog_output(endpoint: EndpointScopeParam) -> ParameterCatalogOutput {
+    let snapshot = catalog::snapshot();
+
+    let parameters = catalog::parameter_specs()
+        .iter()
+        .filter(|spec| parameter_applies_to_scope(spec, endpoint))
+        .map(|spec| ParameterCatalogEntryOutput {
+            name: spec.name.to_string(),
+            description_ja: spec.description_ja.to_string(),
+            allowed_values: spec.allowed_values.to_string(),
+            requirements: RequirementMatrixOutput {
+                code_api: spec.code_api.as_str().to_string(),
+                layer_api: spec.layer_api.as_str().to_string(),
+                metadata_api: spec.metadata_api.as_str().to_string(),
+            },
+            notes: spec.notes.iter().map(|note| (*note).to_string()).collect(),
+        })
+        .collect::<Vec<_>>();
+
+    let limits = catalog::request_limits()
+        .iter()
+        .filter(|limit| limit_applies_to_scope(limit.api_scope, endpoint))
+        .map(|limit| RequestLimitOutput {
+            api_scope: limit.api_scope.to_string(),
+            target: limit.target.to_string(),
+            max_value: limit.max_value,
+            overflow_behavior: limit.overflow_behavior.to_string(),
+        })
+        .collect::<Vec<_>>();
+
+    ParameterCatalogOutput {
+        source_document: snapshot.source_document.to_string(),
+        source_date: snapshot.source_date.to_string(),
+        endpoint_scope: endpoint_scope_name(endpoint).to_string(),
+        general_notes: snapshot
+            .general_notes
+            .iter()
+            .map(|note| (*note).to_string())
+            .collect(),
+        format_codes: catalog::format_codes()
+            .iter()
+            .map(|value| (*value).to_string())
+            .collect(),
+        language_codes: catalog::language_codes()
+            .iter()
+            .map(|value| (*value).to_string())
+            .collect(),
+        frequency_codes: frequency_codes_for_scope(endpoint),
+        parameters,
+        limits,
+        layer_rules: layer_rules_for_scope(endpoint),
+    }
+}
+
+pub fn to_message_catalog_output(status_filter: Option<u16>) -> MessageCatalogOutput {
+    let snapshot = catalog::snapshot();
+    let messages = catalog::message_codes()
+        .iter()
+        .filter(|entry| status_filter.is_none_or(|status| entry.status == status))
+        .map(|entry| MessageCatalogEntryOutput {
+            status: entry.status,
+            message_id: entry.message_id.to_string(),
+            message: entry.message.to_string(),
+            note: entry.note.to_string(),
+        })
+        .collect::<Vec<_>>();
+
+    MessageCatalogOutput {
+        source_document: snapshot.source_document.to_string(),
+        source_date: snapshot.source_date.to_string(),
+        status_filter,
+        count: messages.len(),
+        messages,
+    }
+}
+
+fn parameter_applies_to_scope(spec: &catalog::ParameterSpec, endpoint: EndpointScopeParam) -> bool {
+    match endpoint {
+        EndpointScopeParam::All => true,
+        EndpointScopeParam::GetDataCode => {
+            spec.code_api != catalog::EndpointRequirement::Unsupported
+        }
+        EndpointScopeParam::GetDataLayer => {
+            spec.layer_api != catalog::EndpointRequirement::Unsupported
+        }
+        EndpointScopeParam::GetMetadata => {
+            spec.metadata_api != catalog::EndpointRequirement::Unsupported
+        }
+    }
+}
+
+fn limit_applies_to_scope(api_scope: &str, endpoint: EndpointScopeParam) -> bool {
+    match endpoint {
+        EndpointScopeParam::All => true,
+        EndpointScopeParam::GetDataCode => api_scope.split(',').any(|value| value == "getDataCode"),
+        EndpointScopeParam::GetDataLayer => {
+            api_scope.split(',').any(|value| value == "getDataLayer")
+        }
+        EndpointScopeParam::GetMetadata => api_scope.split(',').any(|value| value == "getMetadata"),
+    }
+}
+
+fn frequency_codes_for_scope(endpoint: EndpointScopeParam) -> Vec<String> {
+    if matches!(
+        endpoint,
+        EndpointScopeParam::All | EndpointScopeParam::GetDataLayer
+    ) {
+        catalog::frequency_codes()
+            .iter()
+            .map(|value| (*value).to_string())
+            .collect()
+    } else {
+        Vec::new()
+    }
+}
+
+fn layer_rules_for_scope(endpoint: EndpointScopeParam) -> Vec<String> {
+    if matches!(
+        endpoint,
+        EndpointScopeParam::All | EndpointScopeParam::GetDataLayer
+    ) {
+        catalog::layer_rules()
+            .iter()
+            .map(|value| (*value).to_string())
+            .collect()
+    } else {
+        Vec::new()
+    }
+}
+
+fn endpoint_scope_name(endpoint: EndpointScopeParam) -> &'static str {
+    match endpoint {
+        EndpointScopeParam::All => "all",
+        EndpointScopeParam::GetDataCode => "getDataCode",
+        EndpointScopeParam::GetDataLayer => "getDataLayer",
+        EndpointScopeParam::GetMetadata => "getMetadata",
+    }
+}
+
 fn to_meta_output(meta: ResponseMeta) -> MetaOutput {
     MetaOutput {
         status: meta.status,
@@ -229,5 +391,31 @@ mod tests {
 
         let output: CodeToolOutput = to_code_output(response, false);
         assert_eq!(output.raw, None);
+    }
+
+    #[test]
+    fn list_databases_includes_known_code() {
+        let output = to_list_databases_output();
+        assert!(output.databases.iter().any(|entry| entry.code == "BP01"));
+    }
+
+    #[test]
+    fn parameter_catalog_for_metadata_excludes_layer_only_rules() {
+        let output = to_parameter_catalog_output(EndpointScopeParam::GetMetadata);
+        assert!(output.frequency_codes.is_empty());
+        assert!(output.layer_rules.is_empty());
+        assert!(
+            output
+                .parameters
+                .iter()
+                .all(|item| item.requirements.metadata_api != "unsupported")
+        );
+    }
+
+    #[test]
+    fn message_catalog_can_filter_by_status() {
+        let output = to_message_catalog_output(Some(503));
+        assert_eq!(output.count, 1);
+        assert_eq!(output.messages[0].message_id, "M181091S");
     }
 }
