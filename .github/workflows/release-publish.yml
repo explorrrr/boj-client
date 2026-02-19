@@ -155,8 +155,6 @@ jobs:
     needs: prepare_release
     if: ${{ !inputs.dry_run }}
     runs-on: ubuntu-latest
-    environment:
-      name: crates-io
 
     steps:
       - name: Checkout master with full history
