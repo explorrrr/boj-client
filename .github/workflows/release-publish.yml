@@ -1,0 +1,174 @@
+name: Release and Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_strategy:
+        description: "Release strategy"
+        required: true
+        type: choice
+        options:
+          - initial
+          - semver
+        default: semver
+      release_level:
+        description: "SemVer release level (used when release_strategy=semver)"
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: patch
+      dry_run:
+        description: "Prepare release only (skip crates.io publish)"
+        required: true
+        type: boolean
+        default: true
+
+concurrency:
+  group: release-publish
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify release gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: cargo fmt
+        run: cargo fmt --all -- --check
+
+      - name: cargo clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: cargo doc (warnings denied)
+        run: RUSTDOCFLAGS='-D warnings' cargo doc --workspace --no-deps
+
+      - name: cargo test --doc
+        run: cargo test --doc --workspace
+
+      - name: cargo test
+        run: cargo test --workspace --all-targets
+
+      - name: Live BOJ API contract test
+        env:
+          BOJ_CONTRACT_TEST: "1"
+        run: cargo test --test contract_nightly -- --ignored
+
+      - name: cargo publish dry-run
+        run: cargo publish --dry-run
+
+  prepare_release:
+    name: Prepare release commit and tag
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout master with full history
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Ensure workflow is dispatched on master
+        run: |
+          if [ "${GITHUB_REF_NAME}" != "master" ]; then
+            echo "This workflow must be dispatched on master."
+            exit 1
+          fi
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Configure git author
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Resolve crate version for initial release
+        id: initial_version
+        if: ${{ inputs.release_strategy == 'initial' }}
+        run: |
+          version="$(sed -nE 's/^version = "([^"]+)"$/\1/p' Cargo.toml | head -n 1)"
+          if [ -z "${version}" ]; then
+            echo "Failed to resolve crate version from Cargo.toml."
+            exit 1
+          fi
+          echo "crate_version=${version}" >> "${GITHUB_OUTPUT}"
+
+      - name: Ensure no existing release tags (initial release)
+        if: ${{ inputs.release_strategy == 'initial' && !inputs.dry_run }}
+        run: |
+          git fetch --tags --force
+          if git tag -l "v*" | grep -q .; then
+            echo "Initial release requires no existing v* tags."
+            git tag -l "v*"
+            exit 1
+          fi
+
+      - name: Install cargo-release
+        if: ${{ inputs.release_strategy == 'semver' }}
+        run: cargo install cargo-release --locked
+
+      - name: Run cargo-release (dry run)
+        if: ${{ inputs.release_strategy == 'semver' && inputs.dry_run }}
+        run: cargo release ${{ inputs.release_level }} --dry-run --no-confirm --no-publish --no-push
+
+      - name: Run cargo-release
+        if: ${{ inputs.release_strategy == 'semver' && !inputs.dry_run }}
+        run: cargo release ${{ inputs.release_level }} --execute --no-confirm --no-publish --no-push
+
+      - name: Push release commit and tags
+        if: ${{ inputs.release_strategy == 'semver' && !inputs.dry_run }}
+        run: |
+          git push origin master
+          git push origin --tags
+
+      - name: Create initial release tag
+        if: ${{ inputs.release_strategy == 'initial' && !inputs.dry_run }}
+        run: |
+          tag="v${{ steps.initial_version.outputs.crate_version }}"
+          git tag -a "${tag}" -m "Release boj-client ${{ steps.initial_version.outputs.crate_version }}"
+
+      - name: Push initial release tag
+        if: ${{ inputs.release_strategy == 'initial' && !inputs.dry_run }}
+        run: |
+          tag="v${{ steps.initial_version.outputs.crate_version }}"
+          git push origin "${tag}"
+
+  publish:
+    name: Publish crate
+    needs: prepare_release
+    if: ${{ !inputs.dry_run }}
+    runs-on: ubuntu-latest
+    environment:
+      name: crates-io
+
+    steps:
+      - name: Checkout master with full history
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Publish to crates.io
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+        run: cargo publish

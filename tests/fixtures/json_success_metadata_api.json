@@ -1,0 +1,45 @@
+{
+  "STATUS": 200,
+  "MESSAGEID": "M181000I",
+  "MESSAGE": "Successfully completed",
+  "DATE": "2026-02-19T09:00:06.669+09:00",
+  "DB": "FM08",
+  "RESULTSET": [
+    {
+      "SERIES_CODE": "",
+      "NAME_OF_TIME_SERIES": "Foreign Exchange Rates (Daily)",
+      "UNIT": "",
+      "FREQUENCY": "",
+      "CATEGORY": "",
+      "LAYER1": 1,
+      "LAYER2": 0,
+      "LAYER3": 0,
+      "LAYER4": 0,
+      "LAYER5": 0,
+      "START_OF_THE_TIME_SERIES": "",
+      "END_OF_THE_TIME_SERIES": "",
+      "LAST_UPDATE": "",
+      "NOTES": ""
+    },
+    {
+      "SERIES_CODE": "FXERD01",
+      "NAME_OF_TIME_SERIES_J": "東京市場 ドル・円 スポット 9時時点",
+      "NAME_OF_TIME_SERIES": "US.Dollar/Yen Spot Rate at 9:00 in JST",
+      "UNIT_J": "円",
+      "UNIT": "Yen per U.S. Dollar",
+      "FREQUENCY": "DAILY",
+      "CATEGORY_J": "外国為替市況",
+      "CATEGORY": "Foreign Exchange Rates",
+      "LAYER1": 1,
+      "LAYER2": 1,
+      "LAYER3": 0,
+      "LAYER4": 0,
+      "LAYER5": 0,
+      "START_OF_THE_TIME_SERIES": "19990101",
+      "END_OF_THE_TIME_SERIES": "20260217",
+      "LAST_UPDATE": "20260219",
+      "NOTES_J": "注釈",
+      "NOTES": "Notes"
+    }
+  ]
+}

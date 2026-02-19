@@ -1,0 +1,25 @@
+# Local instructions
+AGENTS.md
+CLAUDE.md
+.serena/
+
+# Rust build artifacts
+/target
+
+# Library crate lockfile policy
+Cargo.lock
+
+# insta temporary snapshot files
+**/*.snap.new
+
+# Local env files
+.env
+.env.*
+!.env.example
+
+# Editor / OS noise
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo

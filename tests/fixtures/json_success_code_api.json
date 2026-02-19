@@ -1,0 +1,29 @@
+{
+  "STATUS": 200,
+  "MESSAGEID": "M181000I",
+  "MESSAGE": "正常に終了しました。",
+  "DATE": "2026-02-19T12:38:18.251+09:00",
+  "PARAMETER": {
+    "FORMAT": "JSON",
+    "LANG": "JP",
+    "DB": "CO",
+    "STARTDATE": "202401",
+    "ENDDATE": "202401",
+    "STARTPOSITION": ""
+  },
+  "NEXTPOSITION": null,
+  "RESULTSET": [
+    {
+      "SERIES_CODE": "TK99F1000601GCQ01000",
+      "NAME_OF_TIME_SERIES_J": "D.I./業況/大企業/製造業/実績",
+      "UNIT_J": "%ポイント",
+      "FREQUENCY": "QUARTERLY",
+      "CATEGORY_J": "全国短観・判断項目",
+      "LAST_UPDATE": 20251216,
+      "VALUES": {
+        "SURVEY_DATES": [202401, 202402],
+        "VALUES": [11, null]
+      }
+    }
+  ]
+}

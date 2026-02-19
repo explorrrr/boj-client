@@ -1,0 +1,25 @@
+{
+  "STATISTICS_DATA": {
+    "RESULT": {
+      "STATUS": "200",
+      "MESSAGEID": "M181000I",
+      "MESSAGE": "正常に終了しました。",
+      "DATE": "20260219085000"
+    },
+    "PARAMETER": {
+      "FORMAT": "JSON",
+      "LANG": "JP",
+      "DB": "CO"
+    },
+    "NEXTPOSITION": "250",
+    "DATA_INF": {
+      "DATA_OBJ": [
+        {
+          "SERIES_CODE": "TK99F1000601GCQ01000",
+          "SURVEY_DATES": "202401",
+          "VALUES": "1.2"
+        }
+      ]
+    }
+  }
+}

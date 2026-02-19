@@ -1,0 +1,33 @@
+{"run_id":"1771473109-581329000","line":55,"new":{"module_name":"snapshot_regression","snapshot_name":"response_shape_snapshot","metadata":{"source":"tests/snapshot_regression.rs","assertion_line":55,"expression":"json!({\n    \"status\": response.meta.status, \"message_id\": response.meta.message_id,\n    \"parameter_db\": response.parameter.db, \"next_position\":\n    response.next_position, \"series_code\":\n    response.series.first().map(|series| &series.series_code), \"points_len\":\n    response.series.first().map(|series| series.points.len()), \"first_point\":\n    response.series.first().and_then(|series| series.points.first()),\n    \"second_point_value\":\n    response.series.first().and_then(|series|\n    series.points.get(1)).and_then(|point| point.value.clone()),\n})"},"snapshot":"first_point:\n  survey_date: \"202401\"\n  value: \"11\"\nmessage_id: M181000I\nnext_position: ~\nparameter_db: CO\npoints_len: 2\nsecond_point_value: ~\nseries_code: TK99F1000601GCQ01000\nstatus: 200"},"old":{"module_name":"snapshot_regression","metadata":{},"snapshot":"---\nfirst_point:\n  survey_date: \"202401\"\n  value: \"11\"\nmessage_id: M181000I\nnext_position: null\nparameter_db: CO\npoints_len: 2\nsecond_point_value: null\nseries_code: TK99F1000601GCQ01000\nstatus: 200"}}
+{"run_id":"1771473117-713234000","line":34,"new":null,"old":null}
+{"run_id":"1771473117-713234000","line":55,"new":null,"old":null}
+{"run_id":"1771474081-566261000","line":35,"new":null,"old":null}
+{"run_id":"1771474081-566261000","line":56,"new":null,"old":null}
+{"run_id":"1771474661-434138000","line":35,"new":null,"old":null}
+{"run_id":"1771474661-434138000","line":56,"new":null,"old":null}
+{"run_id":"1771475023-882586000","line":56,"new":null,"old":null}
+{"run_id":"1771475023-882586000","line":35,"new":null,"old":null}
+{"run_id":"1771475266-120174000","line":35,"new":null,"old":null}
+{"run_id":"1771475266-120174000","line":56,"new":null,"old":null}
+{"run_id":"1771475408-790319000","line":35,"new":null,"old":null}
+{"run_id":"1771475408-790319000","line":56,"new":null,"old":null}
+{"run_id":"1771475621-295362000","line":56,"new":null,"old":null}
+{"run_id":"1771475621-295362000","line":35,"new":null,"old":null}
+{"run_id":"1771476126-534235000","line":59,"new":null,"old":null}
+{"run_id":"1771476126-534235000","line":36,"new":{"module_name":"snapshot_regression","snapshot_name":"request_url_snapshot","metadata":{"source":"tests/snapshot_regression.rs","assertion_line":36,"expression":"json!({\"target\": request.target})"},"snapshot":"target: /api/v1/getDataCode?format=json&lang=jp&db=CO&startDate=202401&endDate=202504&code=TK99F1000601GCQ01000%2CTK99F2000601GCQ01000"},"old":{"module_name":"snapshot_regression","metadata":{},"snapshot":"---\ntarget: \"/api/v1/getDataCode?format=json&lang=jp&db=CO&startDate=202401&endDate=202504&code=TK99F1000601GCQ01000%2CTK99F2000601GCQ01000\""}}
+{"run_id":"1771476151-806407000","line":36,"new":null,"old":null}
+{"run_id":"1771476151-806407000","line":59,"new":null,"old":null}
+{"run_id":"1771476177-280243000","line":36,"new":null,"old":null}
+{"run_id":"1771476177-280243000","line":59,"new":null,"old":null}
+{"run_id":"1771476235-590446000","line":36,"new":null,"old":null}
+{"run_id":"1771476235-590446000","line":59,"new":null,"old":null}
+{"run_id":"1771476270-16090000","line":36,"new":null,"old":null}
+{"run_id":"1771476270-16090000","line":59,"new":null,"old":null}
+{"run_id":"1771476308-11978000","line":36,"new":null,"old":null}
+{"run_id":"1771476308-11978000","line":59,"new":null,"old":null}
+{"run_id":"1771476458-587792000","line":36,"new":null,"old":null}
+{"run_id":"1771476458-587792000","line":59,"new":null,"old":null}
+{"run_id":"1771477314-677585000","line":36,"new":null,"old":null}
+{"run_id":"1771477314-677585000","line":59,"new":null,"old":null}
+{"run_id":"1771477736-975850000","line":59,"new":null,"old":null}
+{"run_id":"1771477736-975850000","line":36,"new":null,"old":null}

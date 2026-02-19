@@ -1,0 +1,14 @@
+{
+  "STATUS": 200,
+  "MESSAGEID": "M181030I",
+  "MESSAGE": "正常に終了しましたが、該当データはありませんでした。",
+  "DATE": "2026-02-19T12:38:18.251+09:00",
+  "PARAMETER": {
+    "FORMAT": "JSON",
+    "LANG": "JP",
+    "DB": "CO",
+    "STARTPOSITION": ""
+  },
+  "NEXTPOSITION": null,
+  "RESULTSET": []
+}
