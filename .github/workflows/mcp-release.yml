@@ -62,8 +62,8 @@ jobs:
             exit 1
           fi
 
-          cargo_version="$(sed -nE 's/^version = \"([^\"]+)\"$/\1/p' mcp-server/Cargo.toml | head -n 1)"
-          npm_version="$(node -p \"require('./npm/boj-mcp-server/package.json').version\")"
+          cargo_version="$(sed -nE 's/^version = "([^"]+)"$/\1/p' mcp-server/Cargo.toml | head -n 1)"
+          npm_version="$(node -p "require('./npm/boj-mcp-server/package.json').version")"
 
           if [ -z "${cargo_version}" ] || [ -z "${npm_version}" ]; then
             echo "Failed to resolve versions from mcp-server/Cargo.toml or npm package."
