@@ -2,7 +2,7 @@ BOJ_CONTRACT_TEST ?= 1
 
 .DEFAULT_GOAL := help
 
-.PHONY: help test test-contract test-all build build-release fmt fmt-check clippy doc doc-test doc-check check example-offline example-live
+.PHONY: help test test-contract test-all build build-release build-mcp run-mcp fmt fmt-check clippy doc doc-test doc-check check example-offline example-live
 
 help: ## Show available make targets
 	@awk 'BEGIN {FS = ":.*##"; print "Available targets:"} /^[a-zA-Z0-9_-]+:.*##/ {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -22,6 +22,12 @@ build: ## Build workspace in debug mode
 
 build-release: ## Build workspace in release mode
 	cargo build --workspace --all-targets --release
+
+build-mcp: ## Build MCP server binary in release mode
+	cargo build --release -p boj-mcp-server
+
+run-mcp: ## Run MCP server over stdio
+	cargo run -p boj-mcp-server
 
 fmt: ## Format source files
 	cargo fmt --all

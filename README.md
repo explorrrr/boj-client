@@ -57,6 +57,7 @@ boj-client = "0.1.0"
 - [Contributing (English)](./CONTRIBUTING.en.md)
 - [APIマニュアル](./docs/api-manual/README.md)
 - [APIクライアント設計](./docs/design/api-client-versioning.md)
+- [MCPサーバー設計](./docs/design/mcp-server.md)
 - [ライセンス](./LICENSE)
 - [Buy Me a Coffee](https://buymeacoffee.com/explorrrr)
 
@@ -84,6 +85,38 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 ```
+
+## MCPサーバー（stdio）
+
+このリポジトリには、`boj-client` を MCP 経由で利用するための `boj-mcp-server`（Rustバイナリ）が同梱されています。
+
+### 提供ツール
+
+- `boj_get_data_code`
+- `boj_get_data_layer`
+- `boj_get_metadata`
+
+### ローカル実行
+
+```bash
+cargo run -p boj-mcp-server
+```
+
+### MCPクライアント設定例
+
+```json
+{
+  "mcpServers": {
+    "boj": {
+      "command": "/absolute/path/to/boj-mcp-server",
+      "args": []
+    }
+  }
+}
+```
+
+`include_raw` を `true` にしたときだけ `raw` を返します。  
+`get_data_code` / `get_data_layer` は単ページ返却で、続き取得は `next_position` を指定して再実行してください。
 
 ## 公開APIノート（0.1.0）
 

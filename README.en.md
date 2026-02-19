@@ -57,6 +57,7 @@ boj-client = "0.1.0"
 - [Contributing (Japanese)](./CONTRIBUTING.md)
 - [API manual](./docs/api-manual/README.md)
 - [API client design](./docs/design/api-client-versioning.md)
+- [MCP server design](./docs/design/mcp-server.md)
 - [License](./LICENSE)
 - [Buy Me a Coffee](https://buymeacoffee.com/explorrrr)
 
@@ -84,6 +85,38 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 ```
+
+## MCP Server (stdio)
+
+This repository includes `boj-mcp-server`, a Rust MCP server binary that exposes `boj-client` through MCP.
+
+### Available tools
+
+- `boj_get_data_code`
+- `boj_get_data_layer`
+- `boj_get_metadata`
+
+### Run locally
+
+```bash
+cargo run -p boj-mcp-server
+```
+
+### MCP client config example
+
+```json
+{
+  "mcpServers": {
+    "boj": {
+      "command": "/absolute/path/to/boj-mcp-server",
+      "args": []
+    }
+  }
+}
+```
+
+`raw` is returned only when `include_raw=true`.  
+`get_data_code` and `get_data_layer` are single-page responses; use `next_position` to request the next page.
 
 ## Public API Notes (0.1.0)
 

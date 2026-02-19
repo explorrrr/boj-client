@@ -1,0 +1,80 @@
+name: MCP Server Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "mcp-server-v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build MCP server binaries
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build release binary
+        run: cargo build --release -p boj-mcp-server
+
+      - name: Package binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          BIN_NAME="boj-mcp-server"
+          OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
+          ARCH="$(uname -m)"
+          PACKAGE_NAME="${BIN_NAME}-${OS}-${ARCH}"
+
+          mkdir -p "${PACKAGE_NAME}"
+          cp "target/release/${BIN_NAME}" "${PACKAGE_NAME}/"
+          tar -czf "${PACKAGE_NAME}.tar.gz" "${PACKAGE_NAME}"
+          shasum -a 256 "${PACKAGE_NAME}.tar.gz" > "${PACKAGE_NAME}.sha256"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcp-server-${{ matrix.os }}
+          path: |
+            boj-mcp-server-*.tar.gz
+            boj-mcp-server-*.sha256
+
+  publish:
+    name: Publish GitHub release assets
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Build consolidated checksum file
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd dist
+          cat ./*.sha256 > SHA256SUMS
+
+      - name: Attach release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.tar.gz
+            dist/SHA256SUMS
