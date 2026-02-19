@@ -3,33 +3,15 @@ name: Release and Publish
 on:
   workflow_dispatch:
     inputs:
-      release_strategy:
-        description: "Release strategy"
+      version:
+        description: "Crate version to publish (must match Cargo.toml)"
         required: true
-        type: choice
-        options:
-          - initial
-          - semver
-        default: semver
-      release_level:
-        description: "SemVer release level (used when release_strategy=semver)"
-        required: true
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
-        default: patch
+        type: string
       dry_run:
-        description: "Prepare release only (skip crates.io publish)"
+        description: "Run release gate only (skip crates.io publish)"
         required: true
         type: boolean
         default: true
-      publish_only:
-        description: "Skip release commit/tag steps and publish the current master version"
-        required: true
-        type: boolean
-        default: false
 
 concurrency:
   group: release-publish
@@ -39,9 +21,68 @@ permissions:
   contents: read
 
 jobs:
-  verify:
+  validate_version:
+    name: Validate version input
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.validate.outputs.version }}
+
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Ensure workflow runs from master
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_REF_NAME}" != "master" ]; then
+            echo "This workflow must be dispatched on master."
+            exit 1
+          fi
+
+      - name: Validate input version and Cargo.toml version
+        id: validate
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          input_version="${{ inputs.version }}"
+          version_pattern='^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.]+)?$'
+          if ! printf '%s\n' "${input_version}" | grep -Eq "${version_pattern}"; then
+            echo "Invalid version format: ${input_version}"
+            exit 1
+          fi
+
+          cargo_version="$(sed -nE 's/^version = "([^"]+)"$/\1/p' Cargo.toml | head -n 1)"
+          if [ -z "${cargo_version}" ]; then
+            echo "Failed to resolve crate version from Cargo.toml."
+            exit 1
+          fi
+
+          if [ "${input_version}" != "${cargo_version}" ]; then
+            echo "Version mismatch: input=${input_version}, cargo=${cargo_version}"
+            exit 1
+          fi
+
+          echo "version=${input_version}" >> "${GITHUB_OUTPUT}"
+
+      - name: Write workflow summary
+        shell: bash
+        run: |
+          {
+            echo "## Release Publish Validation"
+            echo "- target branch: \`master\`"
+            echo "- requested version: \`${{ inputs.version }}\`"
+            echo "- Cargo.toml version: \`${{ steps.validate.outputs.version }}\`"
+            echo "- dry run: \`${{ inputs.dry_run }}\`"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+  verify_release_gate:
     name: Verify release gate
     runs-on: ubuntu-latest
+    needs: validate_version
 
     steps:
       - name: Checkout master
@@ -75,92 +116,11 @@ jobs:
       - name: cargo publish dry-run
         run: cargo publish --dry-run
 
-  prepare_release:
-    name: Prepare release commit and tag
-    needs: verify
-    if: ${{ !inputs.publish_only }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-      - name: Checkout master with full history
-        uses: actions/checkout@v4
-        with:
-          ref: master
-          fetch-depth: 0
-
-      - name: Ensure workflow is dispatched on master
-        run: |
-          if [ "${GITHUB_REF_NAME}" != "master" ]; then
-            echo "This workflow must be dispatched on master."
-            exit 1
-          fi
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Configure git author
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Resolve crate version for initial release
-        id: initial_version
-        if: ${{ inputs.release_strategy == 'initial' }}
-        run: |
-          version="$(sed -nE 's/^version = "([^"]+)"$/\1/p' Cargo.toml | head -n 1)"
-          if [ -z "${version}" ]; then
-            echo "Failed to resolve crate version from Cargo.toml."
-            exit 1
-          fi
-          echo "crate_version=${version}" >> "${GITHUB_OUTPUT}"
-
-      - name: Ensure no existing release tags (initial release)
-        if: ${{ inputs.release_strategy == 'initial' && !inputs.dry_run }}
-        run: |
-          git fetch --tags --force
-          if git tag -l "v*" | grep -q .; then
-            echo "Initial release requires no existing v* tags."
-            git tag -l "v*"
-            exit 1
-          fi
-
-      - name: Install cargo-release
-        if: ${{ inputs.release_strategy == 'semver' }}
-        run: cargo install cargo-release --locked
-
-      - name: Run cargo-release (dry run)
-        if: ${{ inputs.release_strategy == 'semver' && inputs.dry_run }}
-        run: cargo release ${{ inputs.release_level }} --dry-run --no-confirm --no-publish --no-push
-
-      - name: Run cargo-release
-        if: ${{ inputs.release_strategy == 'semver' && !inputs.dry_run }}
-        run: cargo release ${{ inputs.release_level }} --execute --no-confirm --no-publish --no-push
-
-      - name: Push release commit and tags
-        if: ${{ inputs.release_strategy == 'semver' && !inputs.dry_run }}
-        run: |
-          git push origin master
-          git push origin --tags
-
-      - name: Create initial release tag
-        if: ${{ inputs.release_strategy == 'initial' && !inputs.dry_run }}
-        run: |
-          tag="v${{ steps.initial_version.outputs.crate_version }}"
-          git tag -a "${tag}" -m "Release boj-client ${{ steps.initial_version.outputs.crate_version }}"
-
-      - name: Push initial release tag
-        if: ${{ inputs.release_strategy == 'initial' && !inputs.dry_run }}
-        run: |
-          tag="v${{ steps.initial_version.outputs.crate_version }}"
-          git push origin "${tag}"
-
-  publish_after_prepare:
+  publish_crate:
     name: Publish crate
-    needs: prepare_release
-    if: ${{ !inputs.dry_run && !inputs.publish_only }}
     runs-on: ubuntu-latest
+    needs: [validate_version, verify_release_gate]
+    if: ${{ !inputs.dry_run }}
     permissions:
       contents: read
       id-token: write
@@ -184,30 +144,11 @@ jobs:
           CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
         run: cargo publish
 
-  publish_existing_master:
-    name: Publish crate (existing master version)
-    needs: verify
-    if: ${{ !inputs.dry_run && inputs.publish_only }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-
-    steps:
-      - name: Checkout master with full history
-        uses: actions/checkout@v4
-        with:
-          ref: master
-          fetch-depth: 0
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Authenticate to crates.io (trusted publishing)
-        id: auth
-        uses: rust-lang/crates-io-auth-action@v1
-
-      - name: Publish to crates.io
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
-        run: cargo publish
+      - name: Write publish summary
+        shell: bash
+        run: |
+          {
+            echo "## crates.io Publish"
+            echo "- published version: \`${{ needs.validate_version.outputs.version }}\`"
+            echo "- trusted publishing: enabled"
+          } >> "${GITHUB_STEP_SUMMARY}"
