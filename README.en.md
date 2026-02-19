@@ -86,9 +86,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-## MCP Server (stdio)
+## MCP Server (stdio / npx)
 
-This repository includes `boj-mcp-server`, a Rust MCP server binary that exposes `boj-client` through MCP.
+This repository includes both the Rust MCP server binary `boj-mcp-server` and the `npx` launcher package `@explorrrr/boj-mcp-server`.
 
 ### Available tools
 
@@ -96,24 +96,47 @@ This repository includes `boj-mcp-server`, a Rust MCP server binary that exposes
 - `boj_get_data_layer`
 - `boj_get_metadata`
 
-### Run locally
+### Run with npx
+
+```bash
+npx -y @explorrrr/boj-mcp-server --help
+```
+
+### Run locally (Rust development)
 
 ```bash
 cargo run -p boj-mcp-server
 ```
 
-### MCP client config example
+### MCP client config example (npx)
 
 ```json
 {
   "mcpServers": {
     "boj": {
-      "command": "/absolute/path/to/boj-mcp-server",
-      "args": []
+      "command": "npx",
+      "args": ["-y", "@explorrrr/boj-mcp-server"]
     }
   }
 }
 ```
+
+### Launcher environment variables
+
+- `BOJ_MCP_SERVER_PATH`: use an existing local binary directly (skip download)
+- `BOJ_MCP_CACHE_DIR`: cache directory for downloaded binaries
+- `BOJ_MCP_RELEASE_BASE_URL`: release download base URL (default: `https://github.com/explorrrr/boj-client/releases/download`)
+
+### Supported targets
+
+- `linux-x64`
+- `darwin-x64`
+- `darwin-arm64`
+- `win32-x64`
+
+### Maintainer release flow
+
+`mcp-release.yml` is executed via `workflow_dispatch`. The `version` input must match both `mcp-server/Cargo.toml` and `npm/boj-mcp-server/package.json`. npm publication runs only when `publish_npm=true`.
 
 `raw` is returned only when `include_raw=true`.  
 `get_data_code` and `get_data_layer` are single-page responses; use `next_position` to request the next page.

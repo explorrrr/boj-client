@@ -1,0 +1,35 @@
+{
+  "name": "@explorrrr/boj-mcp-server",
+  "version": "0.1.0",
+  "description": "NPX launcher for boj-mcp-server",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/explorrrr/boj-client.git",
+    "directory": "npm/boj-mcp-server"
+  },
+  "homepage": "https://github.com/explorrrr/boj-client/tree/master/npm/boj-mcp-server",
+  "bugs": {
+    "url": "https://github.com/explorrrr/boj-client/issues"
+  },
+  "bin": {
+    "boj-mcp-server": "bin/launcher.cjs"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test test",
+    "test:unit": "node --test test/unit",
+    "test:integration": "node --test test/integration"
+  },
+  "dependencies": {
+    "tar": "^7.4.3"
+  }
+}
