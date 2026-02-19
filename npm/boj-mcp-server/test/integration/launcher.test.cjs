@@ -72,14 +72,7 @@ async function startStaticServer(rootDir) {
   };
 }
 
-async function createReleaseFixture({
-  rootDir,
-  version,
-  targetTriple,
-  binaryName,
-  scriptBody,
-  checksumOverride,
-}) {
+async function createReleaseFixture({ rootDir, version, targetTriple, binaryName, scriptBody, checksumOverride }) {
   const tag = releaseTag(version);
   const releaseDir = path.join(rootDir, tag);
   await fs.mkdir(releaseDir, { recursive: true });
@@ -105,11 +98,7 @@ async function createReleaseFixture({
 
   const digest = await calculateFileSha256(assetPath);
   const checksum = checksumOverride || digest;
-  await fs.writeFile(
-    path.join(releaseDir, "SHA256SUMS"),
-    `${checksum}  ${assetName}\n`,
-    "utf8",
-  );
+  await fs.writeFile(path.join(releaseDir, "SHA256SUMS"), `${checksum}  ${assetName}\n`, "utf8");
 
   await fs.rm(stagingDir, { recursive: true, force: true });
 
@@ -128,12 +117,7 @@ test("main downloads binary, verifies checksum, caches it, and forwards args", a
 
   const { targetTriple, binaryName } = resolveTarget("linux", "x64");
 
-  const scriptBody = [
-    "#!/bin/sh",
-    "printf '%s\\n' \"$@\" > \"${LAUNCHER_TEST_ARGS_FILE}\"",
-    "exit 0",
-    "",
-  ].join("\n");
+  const scriptBody = ["#!/bin/sh", 'printf \'%s\\n\' "$@" > "${LAUNCHER_TEST_ARGS_FILE}"', "exit 0", ""].join("\n");
 
   const { assetName, tag } = await createReleaseFixture({
     rootDir: releaseRoot,
@@ -234,12 +218,7 @@ test("BOJ_MCP_SERVER_PATH bypasses download", async () => {
   const binaryPath = path.join(tempDir, "boj-mcp-server");
   const argsOut = path.join(tempDir, "args.txt");
 
-  const scriptBody = [
-    "#!/bin/sh",
-    "printf '%s\\n' \"$@\" > \"${LAUNCHER_TEST_ARGS_FILE}\"",
-    "exit 0",
-    "",
-  ].join("\n");
+  const scriptBody = ["#!/bin/sh", 'printf \'%s\\n\' "$@" > "${LAUNCHER_TEST_ARGS_FILE}"', "exit 0", ""].join("\n");
 
   try {
     await fs.writeFile(binaryPath, scriptBody, "utf8");

@@ -106,6 +106,10 @@ jobs:
         working-directory: npm/boj-mcp-server
         run: npm install --no-package-lock
 
+      - name: Run Biome check
+        working-directory: npm/boj-mcp-server
+        run: npm run check
+
       - name: Run npm tests
         working-directory: npm/boj-mcp-server
         run: npm test

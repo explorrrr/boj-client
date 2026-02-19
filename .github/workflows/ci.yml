@@ -26,3 +26,28 @@ jobs:
 
       - name: Cargo test (offline scope)
         run: cargo test --workspace --all-targets
+
+  npm_launcher:
+    name: npm launcher checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install npm dependencies
+        working-directory: npm/boj-mcp-server
+        run: npm install --no-package-lock
+
+      - name: Run Biome check
+        working-directory: npm/boj-mcp-server
+        run: npm run check
+
+      - name: Run npm tests
+        working-directory: npm/boj-mcp-server
+        run: npm test

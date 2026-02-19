@@ -18,10 +18,7 @@ async function isStaleLock(lockPath, staleMs) {
   }
 }
 
-async function acquireLock(
-  lockPath,
-  { staleMs = 5 * 60 * 1000, retryMs = 200, maxWaitMs = 60 * 1000 } = {},
-) {
+async function acquireLock(lockPath, { staleMs = 5 * 60 * 1000, retryMs = 200, maxWaitMs = 60 * 1000 } = {}) {
   const startedAt = Date.now();
 
   while (true) {

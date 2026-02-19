@@ -24,9 +24,7 @@ function resolveTarget(platform, arch) {
   const resolved = SUPPORTED_TARGETS[key];
   if (!resolved) {
     const supported = Object.keys(SUPPORTED_TARGETS).join(", ");
-    throw new Error(
-      `unsupported platform/arch combination: ${key}. supported combinations: ${supported}`,
-    );
+    throw new Error(`unsupported platform/arch combination: ${key}. supported combinations: ${supported}`);
   }
   return resolved;
 }

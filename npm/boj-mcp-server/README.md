@@ -23,6 +23,27 @@ MCP client config example:
 }
 ```
 
+## Development
+
+Install dependencies:
+
+```bash
+npm install --no-package-lock
+```
+
+Run quality checks:
+
+```bash
+npm run check
+npm test
+```
+
+Format files:
+
+```bash
+npm run format
+```
+
 ## Runtime environment variables
 
 - `BOJ_MCP_SERVER_PATH`: absolute/relative path to an existing `boj-mcp-server` binary. If set, no download is performed.
