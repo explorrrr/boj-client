@@ -9,7 +9,7 @@ publish = false
 [dependencies]
 boj-client = { path = ".." }
 clap = { version = "4.5.32", features = ["derive", "env"] }
-reqwest = { version = "0.12.24", default-features = false, features = ["blocking", "rustls-tls"] }
+reqwest = { version = "0.13.2", default-features = false, features = ["blocking", "rustls"] }
 rmcp = { version = "0.16.0", default-features = false, features = ["macros", "server", "transport-io"] }
 schemars = "1.0.4"
 serde = { version = "1.0.228", features = ["derive"] }
