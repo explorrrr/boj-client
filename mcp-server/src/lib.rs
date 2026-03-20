@@ -194,20 +194,18 @@ impl BojMcpServer {
 #[tool_handler(router = self.tool_router)]
 impl ServerHandler for BojMcpServer {
     fn get_info(&self) -> ServerInfo {
-        ServerInfo {
-            protocol_version: protocol::protocol_version_2025_11_25(),
-            instructions: Some(
-                "Use BOJ tools in this order: 1) boj_list_databases 2) boj_get_parameter_catalog 3) data tools 4) boj_get_message_catalog for MESSAGEID lookup.\nTool failures are returned as CallToolResult with isError=true and structured error payload.\nformat/lang accept uppercase input but are normalized to lowercase (json/csv, jp/en)."
-                    .to_string(),
-            ),
-            capabilities: ServerCapabilities::builder()
+        ServerInfo::new(
+            ServerCapabilities::builder()
                 .enable_tools()
                 .enable_prompts()
                 .enable_resources()
                 .enable_completions()
                 .build(),
-            ..Default::default()
-        }
+        )
+        .with_protocol_version(protocol::protocol_version_2025_11_25())
+        .with_instructions(
+            "Use BOJ tools in this order: 1) boj_list_databases 2) boj_get_parameter_catalog 3) data tools 4) boj_get_message_catalog for MESSAGEID lookup.\nTool failures are returned as CallToolResult with isError=true and structured error payload.\nformat/lang accept uppercase input but are normalized to lowercase (json/csv, jp/en).",
+        )
     }
 
     fn complete(
@@ -390,10 +388,7 @@ mod tests {
 
     impl ClientHandler for DummyClientHandler {
         fn get_info(&self) -> ClientInfo {
-            ClientInfo {
-                protocol_version: protocol::protocol_version_2025_11_25(),
-                ..ClientInfo::default()
-            }
+            ClientInfo::default().with_protocol_version(protocol::protocol_version_2025_11_25())
         }
     }
 
@@ -473,12 +468,7 @@ mod tests {
         .clone();
 
         let result = client
-            .call_tool(CallToolRequestParams {
-                meta: None,
-                name: "boj_get_data_code".to_string().into(),
-                arguments: Some(arguments),
-                task: None,
-            })
+            .call_tool(CallToolRequestParams::new("boj_get_data_code").with_arguments(arguments))
             .await
             .expect("tool call should return result");
 
@@ -533,10 +523,9 @@ mod tests {
         );
 
         let resource = client
-            .read_resource(ReadResourceRequestParams {
-                meta: None,
-                uri: discovery::RESOURCE_CALL_ORDER_URI.to_string(),
-            })
+            .read_resource(ReadResourceRequestParams::new(
+                discovery::RESOURCE_CALL_ORDER_URI,
+            ))
             .await
             .expect("read resource");
         assert_eq!(resource.contents.len(), 1);
