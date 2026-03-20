@@ -23,28 +23,21 @@ pub const RESOURCE_TEMPLATE_MESSAGES_URI: &str = "boj://catalog/messages/{status
 
 pub fn list_prompts() -> Vec<Prompt> {
     vec![
-        Prompt {
-            name: PROMPT_DISCOVERY_FLOW.to_string(),
-            title: Some("BOJ Discovery Flow".to_string()),
-            description: Some(
-                "Discover DBs, validate constraints, and prepare safe BOJ tool inputs.".to_string(),
-            ),
-            arguments: Some(vec![prompt_arg(
+        Prompt::new(
+            PROMPT_DISCOVERY_FLOW,
+            Some("Discover DBs, validate constraints, and prepare safe BOJ tool inputs."),
+            Some(vec![prompt_arg(
                 "endpoint",
                 "Endpoint",
                 "Optional endpoint scope: all/get_data_code/get_data_layer/get_metadata.",
                 false,
             )]),
-            icons: None,
-            meta: None,
-        },
-        Prompt {
-            name: PROMPT_FETCH_DATA_CODE_FLOW.to_string(),
-            title: Some("Fetch getDataCode".to_string()),
-            description: Some(
-                "Build a valid getDataCode request and execute it safely.".to_string(),
-            ),
-            arguments: Some(vec![
+        )
+        .with_title("BOJ Discovery Flow"),
+        Prompt::new(
+            PROMPT_FETCH_DATA_CODE_FLOW,
+            Some("Build a valid getDataCode request and execute it safely."),
+            Some(vec![
                 prompt_arg("db", "DB", "BOJ DB code (e.g., FM01).", true),
                 prompt_arg(
                     "codes",
@@ -62,25 +55,19 @@ pub fn list_prompts() -> Vec<Prompt> {
                 prompt_arg("format", "Format", "Optional json/csv.", false),
                 prompt_arg("lang", "Language", "Optional jp/en.", false),
             ]),
-            icons: None,
-            meta: None,
-        },
-        Prompt {
-            name: PROMPT_LATEST_VALUE_FLOW.to_string(),
-            title: Some("Fetch Latest Value".to_string()),
-            description: Some(
-                "Resolve metadata for one series and fetch the latest available points."
-                    .to_string(),
-            ),
-            arguments: Some(vec![
+        )
+        .with_title("Fetch getDataCode"),
+        Prompt::new(
+            PROMPT_LATEST_VALUE_FLOW,
+            Some("Resolve metadata for one series and fetch the latest available points."),
+            Some(vec![
                 prompt_arg("db", "DB", "BOJ DB code.", true),
                 prompt_arg("series_code", "Series code", "Target series code.", true),
                 prompt_arg("format", "Format", "Optional json/csv.", false),
                 prompt_arg("lang", "Language", "Optional jp/en.", false),
             ]),
-            icons: None,
-            meta: None,
-        },
+        )
+        .with_title("Fetch Latest Value"),
     ]
 }
 
@@ -88,9 +75,8 @@ pub fn get_prompt(name: &str, arguments: Option<&JsonObject>) -> Option<GetPromp
     match name {
         PROMPT_DISCOVERY_FLOW => {
             let endpoint = arg_text(arguments, "endpoint").unwrap_or_else(|| "all".to_string());
-            Some(GetPromptResult {
-                description: Some("Recommended discovery and validation sequence.".to_string()),
-                messages: vec![
+            Some(
+                GetPromptResult::new(vec![
                     PromptMessage::new_text(
                         PromptMessageRole::User,
                         format!(
@@ -102,8 +88,9 @@ pub fn get_prompt(name: &str, arguments: Option<&JsonObject>) -> Option<GetPromp
                         "Run in order: 1) boj_list_databases 2) boj_get_parameter_catalog 3) data tool(s) 4) boj_get_message_catalog if STATUS/MESSAGEID needs lookup. Normalize format/lang to lowercase before calls."
                             .to_string(),
                     ),
-                ],
-            })
+                ])
+                .with_description("Recommended discovery and validation sequence."),
+            )
         }
         PROMPT_FETCH_DATA_CODE_FLOW => {
             let db = arg_text(arguments, "db").unwrap_or_else(|| "FM01".to_string());
@@ -113,9 +100,8 @@ pub fn get_prompt(name: &str, arguments: Option<&JsonObject>) -> Option<GetPromp
             let format = arg_text(arguments, "format").unwrap_or_else(|| "json".to_string());
             let lang = arg_text(arguments, "lang").unwrap_or_else(|| "jp".to_string());
 
-            Some(GetPromptResult {
-                description: Some("Safe getDataCode invocation template.".to_string()),
-                messages: vec![
+            Some(
+                GetPromptResult::new(vec![
                     PromptMessage::new_text(
                         PromptMessageRole::User,
                         format!(
@@ -127,8 +113,9 @@ pub fn get_prompt(name: &str, arguments: Option<&JsonObject>) -> Option<GetPromp
                         "Before execution, call boj_get_parameter_catalog and validate date formats. Then call boj_get_data_code with lowercase format/lang and inspect next_position for pagination."
                             .to_string(),
                     ),
-                ],
-            })
+                ])
+                .with_description("Safe getDataCode invocation template."),
+            )
         }
         PROMPT_LATEST_VALUE_FLOW => {
             let db = arg_text(arguments, "db").unwrap_or_else(|| "FM01".to_string());
@@ -137,9 +124,8 @@ pub fn get_prompt(name: &str, arguments: Option<&JsonObject>) -> Option<GetPromp
             let format = arg_text(arguments, "format").unwrap_or_else(|| "json".to_string());
             let lang = arg_text(arguments, "lang").unwrap_or_else(|| "jp".to_string());
 
-            Some(GetPromptResult {
-                description: Some("Latest-value retrieval workflow.".to_string()),
-                messages: vec![
+            Some(
+                GetPromptResult::new(vec![
                     PromptMessage::new_text(
                         PromptMessageRole::User,
                         format!(
@@ -151,8 +137,9 @@ pub fn get_prompt(name: &str, arguments: Option<&JsonObject>) -> Option<GetPromp
                         "Run boj_get_metadata to confirm series validity, then call boj_get_data_code with a narrow date range and choose the latest non-null point."
                             .to_string(),
                     ),
-                ],
-            })
+                ])
+                .with_description("Latest-value retrieval workflow."),
+            )
         }
         _ => None,
     }
@@ -246,9 +233,7 @@ pub fn complete(
     _context: Option<&CompletionContext>,
 ) -> Result<CompleteResult, String> {
     if !supports_reference(reference) {
-        return Ok(CompleteResult {
-            completion: CompletionInfo::default(),
-        });
+        return Ok(CompleteResult::new(CompletionInfo::default()));
     }
 
     let values = completion_values(&argument.name);
@@ -270,16 +255,14 @@ pub fn complete(
             .map_err(|error| format!("failed to build completion: {error}"))?
     };
 
-    Ok(CompleteResult { completion })
+    Ok(CompleteResult::new(completion))
 }
 
 fn prompt_arg(name: &str, title: &str, description: &str, required: bool) -> PromptArgument {
-    PromptArgument {
-        name: name.to_string(),
-        title: Some(title.to_string()),
-        description: Some(description.to_string()),
-        required: Some(required),
-    }
+    PromptArgument::new(name)
+        .with_title(title)
+        .with_description(description)
+        .with_required(required)
 }
 
 fn arg_text(arguments: Option<&JsonObject>, key: &str) -> Option<String> {
@@ -303,26 +286,16 @@ fn resource_template(
     description: &str,
     mime_type: &str,
 ) -> ResourceTemplate {
-    RawResourceTemplate {
-        uri_template: uri_template.to_string(),
-        name: name.to_string(),
-        title: None,
-        description: Some(description.to_string()),
-        mime_type: Some(mime_type.to_string()),
-        icons: None,
-    }
-    .no_annotation()
+    RawResourceTemplate::new(uri_template, name)
+        .with_description(description)
+        .with_mime_type(mime_type)
+        .no_annotation()
 }
 
 fn text_resource(uri: &str, mime_type: &str, text: String) -> ReadResourceResult {
-    ReadResourceResult {
-        contents: vec![ResourceContents::TextResourceContents {
-            uri: uri.to_string(),
-            mime_type: Some(mime_type.to_string()),
-            text,
-            meta: None,
-        }],
-    }
+    ReadResourceResult::new(vec![
+        ResourceContents::text(text, uri).with_mime_type(mime_type),
+    ])
 }
 
 fn supports_reference(reference: &Reference) -> bool {

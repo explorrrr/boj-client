@@ -1,6 +1,6 @@
 {
   "name": "@explorrrr/boj-mcp-server",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "NPX launcher for boj-mcp-server",
   "license": "MIT",
   "repository": {
